@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>OSI Layer Sorter</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f7f9;--surface:#ffffff;--ink:#15202b;--muted:#506072;--line:#c9d2dc;
+  --accent:#1a5bb8;--accent-ink:#ffffff;--accent-soft:#e2ecfa;
+  --good:#146c34;--good-soft:#e0f3e6;--bad:#a8231b;--bad-soft:#fbe4e2;
+  --focus:#b85600;--note:#fff3d6;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0f151c;--surface:#17202a;--ink:#eaf0f6;--muted:#a6b3c2;--line:#34424f;
+    --accent:#7db0ff;--accent-ink:#0a1830;--accent-soft:#1b2e4b;
+    --good:#74d58f;--good-soft:#15321f;--bad:#ff8f86;--bad-soft:#3b1d1b;
+    --focus:#ffb454;--note:#3a2f13;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.125rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1rem 1rem 3rem}
+.wires{display:flex;gap:4px;margin:0 0 1.25rem}
+.wires i{flex:1;height:10px;border-radius:5px;border:1px solid var(--line)}
+.wires .wo{background:repeating-linear-gradient(135deg,#fff 0 5px,#e8821c 5px 10px)}
+.wires .o{background:#e8821c}
+.wires .wg{background:repeating-linear-gradient(135deg,#fff 0 5px,#2e9e4f 5px 10px)}
+.wires .b{background:#2563b8}
+.wires .wb{background:repeating-linear-gradient(135deg,#fff 0 5px,#2563b8 5px 10px)}
+.wires .g{background:#2e9e4f}
+.wires .wn{background:repeating-linear-gradient(135deg,#fff 0 5px,#8a5a33 5px 10px)}
+.wires .n{background:#8a5a33}
+h1{font-size:1.75rem;line-height:1.2;margin:.2rem 0 .4rem}
+h2{font-size:1.25rem;margin:0 0 .5rem}
+.lede{color:var(--muted);margin:0 0 1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:1.1rem}
+button,input{font:inherit;color:inherit}
+button{min-height:2.75rem;padding:.5rem 1rem;border-radius:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.tab[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.check{display:flex;align-items:center;gap:.5rem;min-height:2.75rem}
+.check input{width:1.3rem;height:1.3rem}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+.msg{margin-top:.8rem;font-weight:600;min-height:1.5rem}
+.note{margin-top:.8rem;padding:.6rem .8rem;background:var(--note);border-radius:10px}
+
+.rows{list-style:none;margin:.5rem 0;padding:0}
+.row{display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;border:2px solid var(--line);border-radius:12px;margin:.45rem 0;background:var(--surface)}
+.row .t{flex:1;display:flex;flex-direction:column}
+.row .desc{font-size:.95rem;color:var(--muted)}
+.row .num{font:600 .95rem var(--mono);color:var(--accent)}
+.row .pdu{font-size:.9rem;border:1px solid var(--line);border-radius:999px;padding:.1rem .6rem}
+.row .mk{font-size:.95rem;white-space:nowrap}
+.row.ok{border-color:var(--good);background:var(--good-soft)}
+.row.bad{border-color:var(--bad);background:var(--bad-soft)}
+.mv{display:flex;gap:.3rem}
+.mv button{min-width:2.75rem;padding:.25rem}
+@media (max-width:30rem){.row .mk{display:none}}
+
+.progress{color:var(--muted);margin:0 0 .4rem}
+.item{font-size:1.5rem;font-weight:700;line-height:1.3;margin:0 0 1rem}
+.layers{display:flex;flex-direction:column;gap:.5rem}
+.layerbtn{display:flex;align-items:center;gap:.8rem;text-align:left;width:100%}
+.layerbtn .n{font:700 1.2rem var(--mono);min-width:1.6rem}
+.layerbtn.ok{background:var(--good-soft);border-color:var(--good)}
+.layerbtn.bad{background:var(--bad-soft);border-color:var(--bad);text-decoration:line-through}
+.tip{font-size:.9rem;color:var(--muted);margin:.8rem 0 0}
+details{margin-top:1rem}
+summary{cursor:pointer;font-weight:600;min-height:2.5rem;display:flex;align-items:center}
+table{border-collapse:collapse;margin:.4rem 0;width:100%;font-size:1rem}
+th,td{border:1px solid var(--line);padding:.35rem .6rem;text-align:left;vertical-align:top}
+.summary-list{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<main>
+  <div class="wires" aria-hidden="true"><i class="wo"></i><i class="o"></i><i class="wg"></i><i class="b"></i><i class="wb"></i><i class="g"></i><i class="wn"></i><i class="n"></i></div>
+  <h1>OSI layer sorter</h1>
+  <p class="lede">Learn the seven layers by ordering them, then by matching protocols and devices to the right layer. No timer.</p>
+
+  <div class="tabs" role="group" aria-label="Activity">
+    <button type="button" class="tab" id="tabOrder" aria-pressed="true">Put the layers in order</button>
+    <button type="button" class="tab" id="tabMatch" aria-pressed="false">Which layer is it?</button>
+  </div>
+
+  <section class="card" id="orderSec" aria-labelledby="oh">
+    <h2 id="oh">Put Layer 7 at the top and Layer 1 at the bottom</h2>
+    <label class="check"><input type="checkbox" id="showWhat" checked> Show what each layer does</label>
+    <ol class="rows" id="orderList" aria-label="Layers, top to bottom"></ol>
+    <div class="actions">
+      <button type="button" class="primary" id="checkOrder">Check the order</button>
+      <button type="button" id="hintOrder">Show a memory trick</button>
+      <button type="button" id="reshuffle">Shuffle again</button>
+    </div>
+    <div class="msg" id="orderMsg" role="status" aria-live="polite"></div>
+    <div class="note" id="mnemonic" hidden>
+      <strong>Top to bottom (Layer 7 to 1):</strong> All People Seem To Need Data Processing.<br>
+      <strong>Bottom to top (Layer 1 to 7):</strong> Please Do Not Throw Sausage Pizza Away.
+    </div>
+  </section>
+
+  <section class="card" id="matchSec" hidden aria-labelledby="mh">
+    <h2 id="mh">Which layer is it?</h2>
+    <div id="matchStage"></div>
+    <details>
+      <summary>Cheat sheet</summary>
+      <table>
+        <tr><th>Layer</th><th>What it does</th><th>Data is called</th><th>TCP/IP model</th></tr>
+      </table>
+    </details>
+  </section>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+const LAYERS=[
+ {n:7,name:'Application',what:'Network services that apps use, like web, email and DNS.',pdu:'Data'},
+ {n:6,name:'Presentation',what:'Data formats, encryption and compression.',pdu:'Data'},
+ {n:5,name:'Session',what:'Starts, manages and ends conversations between apps.',pdu:'Data'},
+ {n:4,name:'Transport',what:'TCP and UDP, port numbers and reliable delivery.',pdu:'Segment'},
+ {n:3,name:'Network',what:'IP addresses and routing between networks.',pdu:'Packet'},
+ {n:2,name:'Data Link',what:'MAC addresses, frames and switches on a local network.',pdu:'Frame'},
+ {n:1,name:'Physical',what:'Bits sent as signals over cable, fiber or radio.',pdu:'Bits'}
+];
+const byN=n=>LAYERS.find(l=>l.n===n);
+const TCPIP={7:'Application',6:'Application',5:'Application',4:'Transport',3:'Internet',2:'Network Access',1:'Network Access'};
+
+const POOL=[
+ {t:'HTTPS',l:7,w:'HTTP and HTTPS are the protocols web browsers use to request pages.'},
+ {t:'DNS (turns names into IP addresses)',l:7,w:'DNS is a network service that applications use, so it lives at the Application layer.'},
+ {t:'SMTP (sending email)',l:7,w:'Email protocols like SMTP are Application layer services.'},
+ {t:'SSH remote login',l:7,w:'SSH is an application protocol that gives you a remote command line.'},
+ {t:'JPEG and GIF image formats',l:6,w:'The Presentation layer handles data formats so both sides understand the data.'},
+ {t:'Encrypting and compressing data',l:6,w:'Encryption, compression and formatting are Presentation layer jobs.'},
+ {t:'Starting, managing and ending a conversation between two apps',l:5,w:'Managing the dialog between apps is the Session layer.'},
+ {t:'TCP',l:4,w:'TCP is a Transport layer protocol that gives reliable delivery.'},
+ {t:'UDP',l:4,w:'UDP is a Transport layer protocol that is fast but has no delivery guarantee.'},
+ {t:'Port numbers (like 80 and 443)',l:4,w:'Port numbers tell the receiving device which application gets the data. That is Transport.'},
+ {t:'Segment',l:4,w:'A segment is the name for data at the Transport layer.'},
+ {t:'Acknowledgements and resending lost data',l:4,w:'Reliable delivery with sequencing and acknowledgements is TCP, at the Transport layer.'},
+ {t:'IP address',l:3,w:'IP addresses are Layer 3 addresses used to route traffic between networks.'},
+ {t:'Router',l:3,w:'Routers forward packets between networks using IP addresses.'},
+ {t:'Packet',l:3,w:'A packet is the name for data at the Network layer.'},
+ {t:'ICMP (ping)',l:3,w:'ICMP is used by ping and traceroute and runs at the Network layer.'},
+ {t:'Choosing the best path between networks',l:3,w:'Path selection (routing) is a Network layer job.'},
+ {t:'MAC address',l:2,w:'MAC addresses identify devices on a local network. That is Data Link.'},
+ {t:'Switch',l:2,w:'A basic switch forwards frames using MAC addresses. (Multilayer switches also work at Layer 3, but the classic answer is Layer 2.)'},
+ {t:'Frame',l:2,w:'A frame is the name for data at the Data Link layer.'},
+ {t:'VLAN tag (802.1Q)',l:2,w:'VLAN tags are added to Ethernet frames, so they are Data Link.'},
+ {t:'Frame check sequence (FCS) error detection',l:2,w:'The FCS is at the end of a frame and helps detect errors. That is Data Link.'},
+ {t:'Cat6 cable',l:1,w:'Cables carry the actual signals. That is the Physical layer.'},
+ {t:'Hub',l:1,w:'A hub just repeats electrical signals out every port. It does not read addresses.'},
+ {t:'Bits (1s and 0s)',l:1,w:'Bits are what the Physical layer sends as signals.'},
+ {t:'Fiber-optic cable',l:1,w:'Fiber carries bits as light. That is the Physical layer.'},
+ {t:'Wi-Fi radio signals',l:1,w:'The radio signal itself carries bits through the air, so it is Physical.'},
+ {t:'Repeater',l:1,w:'A repeater boosts the signal, with no knowledge of addresses or data. That is Physical.'}
+];
+
+/* cheat sheet */
+(function(){
+  const tb=document.querySelector('#matchSec table');
+  LAYERS.forEach(l=>{
+    const tr=document.createElement('tr');
+    [l.n+' '+l.name,l.what,l.pdu,TCPIP[l.n]].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
+    tb.appendChild(tr);
+  });
+})();
+
+/* tabs */
+function showTab(which){
+  const o=which==='order';
+  $('#orderSec').hidden=!o;$('#matchSec').hidden=o;
+  $('#tabOrder').setAttribute('aria-pressed',o?'true':'false');
+  $('#tabMatch').setAttribute('aria-pressed',o?'false':'true');
+}
+$('#tabOrder').addEventListener('click',()=>showTab('order'));
+$('#tabMatch').addEventListener('click',()=>showTab('match'));
+
+/* ordering activity */
+let order=[],marks=false,solved=false;
+function shuffleOrder(){
+  do{order=shuffle(LAYERS.map(l=>l.n));}while(order.every((n,i)=>n===7-i));
+  marks=false;solved=false;
+  $('#orderMsg').textContent='';
+  renderOrder();
+}
+function renderOrder(){
+  const showWhat=$('#showWhat').checked;
+  $('#orderList').innerHTML=order.map((n,i)=>{
+    const L=byN(n),good=marks&&n===7-i;
+    const cls='row'+(marks?(good?' ok':' bad'):'');
+    const mk=marks?(good?'✓ Right spot':'✗ Not here'):'';
+    return `<li class="${cls}" data-n="${n}"><span class="t">${solved?`<span class="num">Layer ${n}</span>`:''}<strong>${L.name}</strong>${showWhat?`<span class="desc">${L.what}</span>`:''}</span>${solved?`<span class="pdu">${L.pdu}</span>`:''}<span class="mk">${mk}</span><span class="mv"><button type="button" class="up" data-i="${i}" aria-label="Move ${L.name} up"${i===0?' disabled':''}>▲</button><button type="button" class="down" data-i="${i}" aria-label="Move ${L.name} down"${i===6?' disabled':''}>▼</button></span></li>`;
+  }).join('');
+}
+function move(i,d){
+  const j=i+d;if(j<0||j>6||solved)return;
+  [order[i],order[j]]=[order[j],order[i]];
+  marks=false;$('#orderMsg').textContent='';
+  renderOrder();
+  const li=document.querySelector(`#orderList li[data-n="${order[j]}"]`);
+  let btn=li.querySelector(d<0?'.up':'.down');
+  if(btn.disabled)btn=li.querySelector(d<0?'.down':'.up');
+  btn.focus();
+}
+$('#orderList').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  move(+b.dataset.i,b.classList.contains('up')?-1:1);
+});
+$('#checkOrder').addEventListener('click',()=>{
+  marks=true;
+  const good=order.filter((n,i)=>n===7-i).length;
+  if(good===7){
+    solved=true;
+    $('#orderMsg').textContent='Perfect. Layer 7 is on top and Layer 1 is on the bottom. The labels now show each layer number and the name for its data (Data, Segment, Packet, Frame, Bits).';
+  }else{
+    $('#orderMsg').textContent=`${good} of 7 are in the right spot. Move the ones marked ✗, or try the memory trick.`;
+  }
+  renderOrder();
+});
+$('#hintOrder').addEventListener('click',()=>{$('#mnemonic').hidden=false;});
+$('#reshuffle').addEventListener('click',()=>{$('#mnemonic').hidden=true;shuffleOrder();});
+$('#showWhat').addEventListener('change',renderOrder);
+
+/* matching activity */
+let deck=[],idx=0,right=0,missed=[],curWrong=0,solvedItem=false;
+function startRound(){
+  deck=shuffle(POOL.slice()).slice(0,10);idx=0;right=0;missed=[];
+  renderMatch();
+}
+function renderMatch(){
+  const st=$('#matchStage');
+  if(idx>=deck.length){
+    st.innerHTML='';
+    const p=document.createElement('p');p.className='item';
+    p.textContent=`You got ${right} of ${deck.length} on the first try.`;
+    st.appendChild(p);
+    if(missed.length){
+      const intro=document.createElement('p');intro.textContent='Review these:';st.appendChild(intro);
+      const ul=document.createElement('ul');ul.className='summary-list';
+      missed.forEach(it=>{const li=document.createElement('li');const L=byN(it.l);li.textContent=`${it.t}: Layer ${L.n} (${L.name})`;ul.appendChild(li);});
+      st.appendChild(ul);
+    }
+    const b=document.createElement('button');b.type='button';b.className='primary';b.textContent='Play another round';
+    b.addEventListener('click',startRound);
+    const w=document.createElement('div');w.className='actions';w.appendChild(b);st.appendChild(w);
+    b.focus();
+    return;
+  }
+  const it=deck[idx];curWrong=0;solvedItem=false;
+  st.innerHTML=`<p class="progress">Item ${idx+1} of ${deck.length}</p>
+    <p class="item" id="itemText"></p>
+    <div class="layers" role="group" aria-label="Choose a layer">${LAYERS.map(l=>`<button type="button" class="layerbtn" data-n="${l.n}"><span class="n">${l.n}</span><span>${l.name}</span></button>`).join('')}</div>
+    <div class="msg" id="matchMsg" role="status" aria-live="polite"></div>
+    <div class="actions"><button type="button" class="primary" id="nextItem" hidden>${idx+1===deck.length?'See results':'Next item'}</button></div>
+    <p class="tip">Tip: press the keys 1 to 7 to choose a layer.</p>`;
+  $('#itemText').textContent=it.t;
+  $('#nextItem').addEventListener('click',()=>{idx++;renderMatch();});
+}
+function choose(n){
+  if(solvedItem||idx>=deck.length)return;
+  const it=deck[idx];
+  const btn=document.querySelector(`.layerbtn[data-n="${n}"]`);
+  if(!btn||btn.disabled)return;
+  if(n===it.l){
+    solvedItem=true;
+    btn.classList.add('ok');
+    if(curWrong===0)right++;
+    $('#matchMsg').textContent=`Correct. ${it.w} In the TCP/IP model this is the ${TCPIP[n]} layer.`;
+    document.querySelectorAll('.layerbtn').forEach(b=>{if(b!==btn)b.disabled=true;});
+    $('#nextItem').hidden=false;$('#nextItem').focus();
+  }else{
+    curWrong++;
+    if(curWrong===1)missed.push(it);
+    btn.classList.add('bad');btn.disabled=true;
+    $('#matchMsg').textContent=`Not Layer ${n}. Try another layer, or open the cheat sheet.`;
+  }
+}
+$('#matchStage').addEventListener('click',e=>{const b=e.target.closest('.layerbtn');if(b)choose(+b.dataset.n);});
+document.addEventListener('keydown',e=>{
+  if($('#matchSec').hidden)return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(/^[1-7]$/.test(e.key))choose(+e.key);
+});
+
+shuffleOrder();
+startRound();
+})();
+</script>
+</body>
+</html>

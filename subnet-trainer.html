@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Subnetting Trainer</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f7f9;--surface:#ffffff;--ink:#15202b;--muted:#506072;--line:#c9d2dc;
+  --accent:#1a5bb8;--accent-ink:#ffffff;--accent-soft:#e2ecfa;
+  --good:#146c34;--good-soft:#e0f3e6;--bad:#a8231b;--bad-soft:#fbe4e2;
+  --focus:#b85600;--note:#fff3d6;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0f151c;--surface:#17202a;--ink:#eaf0f6;--muted:#a6b3c2;--line:#34424f;
+    --accent:#7db0ff;--accent-ink:#0a1830;--accent-soft:#1b2e4b;
+    --good:#74d58f;--good-soft:#15321f;--bad:#ff8f86;--bad-soft:#3b1d1b;
+    --focus:#ffb454;--note:#3a2f13;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.125rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1rem 1rem 3rem}
+.wires{display:flex;gap:4px;margin:0 0 1.25rem}
+.wires i{flex:1;height:10px;border-radius:5px;border:1px solid var(--line)}
+.wires .wo{background:repeating-linear-gradient(135deg,#fff 0 5px,#e8821c 5px 10px)}
+.wires .o{background:#e8821c}
+.wires .wg{background:repeating-linear-gradient(135deg,#fff 0 5px,#2e9e4f 5px 10px)}
+.wires .b{background:#2563b8}
+.wires .wb{background:repeating-linear-gradient(135deg,#fff 0 5px,#2563b8 5px 10px)}
+.wires .g{background:#2e9e4f}
+.wires .wn{background:repeating-linear-gradient(135deg,#fff 0 5px,#8a5a33 5px 10px)}
+.wires .n{background:#8a5a33}
+h1{font-size:1.75rem;line-height:1.2;margin:.2rem 0 .4rem}
+.lede{color:var(--muted);margin:0 0 1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:1.1rem}
+button,input{font:inherit;color:inherit}
+button{min-height:2.75rem;padding:.5rem 1rem;border-radius:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.55;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.controls{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;align-items:flex-end;margin-bottom:1rem}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.5rem}
+legend{font-weight:600;margin-bottom:.35rem;padding:0}
+.seg label{position:relative;display:inline-block}
+.seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer}
+.seg span{display:inline-block;padding:.45rem .9rem;border:2px solid var(--line);border-radius:10px;background:var(--surface)}
+.seg input:checked+span{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.check{display:flex;align-items:center;gap:.5rem;min-height:2.75rem}
+.check input{width:1.3rem;height:1.3rem}
+
+.prompt{margin:0;color:var(--muted)}
+.addr{font:700 2.1rem/1.2 var(--mono);margin:.15rem 0 .8rem;word-break:break-all}
+.bin{overflow-x:auto;padding:.6rem .8rem;border-radius:10px;background:var(--bg);border:1px solid var(--line);margin-bottom:1.1rem}
+.bits{margin:.2rem 0 .5rem;white-space:nowrap}
+.bits .lab{display:block;font-size:.9rem;color:var(--muted)}
+.oct{display:inline-block;margin-right:.75rem;font:1.1rem var(--mono);letter-spacing:.07em}
+.b.n{color:var(--accent);font-weight:700}
+.b.h{color:var(--muted)}
+.b.cut{border-left:3px solid var(--ink);padding-left:2px;margin-left:-1px}
+.legend{font-size:.9rem;color:var(--muted);margin:.3rem 0 0;white-space:normal}
+
+.fields{display:grid;grid-template-columns:1fr;gap:.7rem}
+@media (min-width:34rem){.fields{grid-template-columns:1fr 1fr}}
+.field label{display:block;font-weight:600;margin-bottom:.2rem}
+.field input{width:100%;padding:.55rem .7rem;border:2px solid var(--line);border-radius:10px;background:var(--surface);font-family:var(--mono);font-size:1.1rem}
+.field input.ok{border-color:var(--good);background:var(--good-soft)}
+.field input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.mark{display:block;min-height:1.4rem;font-size:.95rem}
+.mark.ok{color:var(--good)}.mark.bad{color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+#feedback{margin-top:.8rem;font-weight:600;min-height:1.5rem}
+#hints{margin:.7rem 0 0;padding-left:1.4rem}
+#hints li{margin:.5rem 0;padding:.5rem .7rem;background:var(--note);border-radius:8px;list-style-position:inside}
+.score{color:var(--muted);margin:1rem 0 0}
+details{margin-top:1rem}
+summary{cursor:pointer;font-weight:600;min-height:2.5rem;display:flex;align-items:center}
+table{border-collapse:collapse;margin:.4rem 0}
+th,td{border:1px solid var(--line);padding:.3rem .7rem;text-align:left}
+</style>
+</head>
+<body>
+<main>
+  <div class="wires" aria-hidden="true"><i class="wo"></i><i class="o"></i><i class="wg"></i><i class="b"></i><i class="wb"></i><i class="g"></i><i class="wn"></i><i class="n"></i></div>
+  <h1>Subnetting trainer</h1>
+  <p class="lede">Work out the network details for each host address. There is no timer. Use the hints whenever you want.</p>
+
+  <div class="controls">
+    <fieldset class="seg">
+      <legend>Difficulty</legend>
+      <label><input type="radio" name="level" value="easy" checked><span>Easy (/24 to /30)</span></label>
+      <label><input type="radio" name="level" value="medium"><span>Medium (/16 to /30)</span></label>
+      <label><input type="radio" name="level" value="hard"><span>Hard (/9 to /30)</span></label>
+    </fieldset>
+    <label class="check"><input type="checkbox" id="showBin" checked> Show binary view</label>
+  </div>
+
+  <section class="card" aria-labelledby="qhead">
+    <p class="prompt" id="qhead">Find the details for this host:</p>
+    <div class="addr" id="addr"></div>
+    <div class="bin" id="bin"></div>
+    <form id="form" novalidate>
+      <div class="fields" id="fields"></div>
+      <div class="actions">
+        <button type="submit" class="primary" id="checkBtn">Check my answers</button>
+        <button type="button" id="hintBtn">Give me a hint</button>
+        <button type="button" id="showBtn">Show the answers</button>
+        <button type="button" class="primary" id="nextBtn" hidden>Next question</button>
+      </div>
+    </form>
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <ol id="hints" aria-label="Hints"></ol>
+  </section>
+
+  <p class="score" id="score" hidden></p>
+
+  <details>
+    <summary>Cheat sheet: mask values and block sizes</summary>
+    <table>
+      <tr><th>Extra 1-bits in the octet</th><th>Mask value</th><th>Block size</th></tr>
+      <tr><td>1</td><td>128</td><td>128</td></tr>
+      <tr><td>2</td><td>192</td><td>64</td></tr>
+      <tr><td>3</td><td>224</td><td>32</td></tr>
+      <tr><td>4</td><td>240</td><td>16</td></tr>
+      <tr><td>5</td><td>248</td><td>8</td></tr>
+      <tr><td>6</td><td>252</td><td>4</td></tr>
+      <tr><td>7</td><td>254</td><td>2</td></tr>
+      <tr><td>8</td><td>255</td><td>1</td></tr>
+    </table>
+    <p>Block size = 256 minus the mask value. Usable hosts = 2<sup>host bits</sup> minus 2.</p>
+  </details>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const LEVELS={easy:[24,30],medium:[16,30],hard:[9,30]};
+const FIELDS_EASY=['net','bc','hosts'];
+const FIELDS_ALL=['mask','net','first','last','bc','hosts'];
+const LABELS={mask:'Subnet mask',net:'Network address',first:'First usable host',last:'Last usable host',bc:'Broadcast address',hosts:'Number of usable hosts'};
+let q=null,hintsShown=0,checks=0,finished=0,firstTry=0,done=false;
+
+const intToIp=n=>[24,16,8,0].map(s=>(n>>>s)&255).join('.');
+const maskInt=p=>((0xFFFFFFFF<<(32-p))>>>0);
+const rnd=n=>Math.floor(Math.random()*n);
+
+function newQuestion(){
+  const lv=document.querySelector('input[name=level]:checked').value;
+  const [lo,hi]=LEVELS[lv];
+  let p,ip,mask,net,bc;
+  do{
+    p=lo+rnd(hi-lo+1);
+    const r=p<16?0:rnd(3);
+    ip=r===0?167772160+rnd(16777216):r===1?2886729728+rnd(1048576):3232235520+rnd(65536);
+    mask=maskInt(p);
+    net=(ip&mask)>>>0;
+    bc=((net|(~mask))>>>0);
+  }while(ip===net||ip===bc);
+  q={p,ip,mask,net,bc,
+     ans:{mask:intToIp(mask),net:intToIp(net),first:intToIp(net+1),last:intToIp(bc-1),bc:intToIp(bc),hosts:String(Math.pow(2,32-p)-2)},
+     fields:lv==='easy'?FIELDS_EASY:FIELDS_ALL};
+  hintsShown=0;checks=0;done=false;
+  render();
+}
+
+function bitsRow(n,p,label){
+  let h=`<div class="bits"><span class="lab">${label}</span>`;
+  for(let o=0;o<4;o++){
+    h+='<span class="oct">';
+    for(let b=0;b<8;b++){
+      const idx=o*8+b,bit=(n>>>(31-idx))&1;
+      h+=`<span class="b ${idx<p?'n':'h'}${idx===p?' cut':''}">${bit}</span>`;
+    }
+    h+='</span>';
+  }
+  return h+'</div>';
+}
+
+function render(){
+  $('#addr').textContent=`${intToIp(q.ip)} /${q.p}`;
+  $('#bin').innerHTML=bitsRow(q.ip,q.p,'Address in binary')+bitsRow(q.mask,q.p,'Subnet mask in binary')+
+    '<p class="legend">Bold blue bits are the network part. Grey bits are the host part. The thick line marks where they split.</p>';
+  $('#bin').hidden=!$('#showBin').checked;
+  $('#fields').innerHTML=q.fields.map(f=>`<div class="field"><label for="f-${f}">${LABELS[f]}</label><input id="f-${f}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${f==='hosts'?'numeric':'decimal'}"><span class="mark" id="m-${f}"></span></div>`).join('');
+  $('#feedback').textContent='';
+  $('#hints').innerHTML='';
+  $('#hintBtn').disabled=false;$('#hintBtn').textContent='Give me a hint';
+  $('#checkBtn').disabled=false;$('#showBtn').disabled=false;
+  $('#nextBtn').hidden=true;
+  updateScore();
+  $('#fields input').focus({preventScroll:true});
+}
+
+function updateScore(){
+  const s=$('#score');
+  s.hidden=finished===0;
+  s.textContent=`Questions finished: ${finished}. Correct on the first check: ${firstTry}.`;
+}
+
+function norm(f,v){
+  v=v.trim();
+  if(f==='hosts')return v.replace(/[,\s]/g,'');
+  if(/^\d+(\.\d+){3}$/.test(v))return v.split('.').map(Number).join('.');
+  return v;
+}
+
+function fb(t){$('#feedback').textContent=t;}
+
+function finish(first){
+  done=true;finished++;if(first)firstTry++;
+  $('#checkBtn').disabled=true;$('#showBtn').disabled=true;$('#hintBtn').disabled=true;
+  $('#nextBtn').hidden=false;$('#nextBtn').focus();
+  updateScore();
+}
+
+function check(e){
+  e.preventDefault();
+  if(done)return;
+  checks++;
+  let right=0;
+  q.fields.forEach(f=>{
+    const inp=$('#f-'+f),m=$('#m-'+f);
+    const ok=norm(f,inp.value)===q.ans[f];
+    inp.classList.toggle('ok',ok);inp.classList.toggle('bad',!ok);
+    inp.setAttribute('aria-invalid',ok?'false':'true');
+    m.className='mark '+(ok?'ok':'bad');
+    m.textContent=ok?'✓ Correct':'✗ Not yet';
+    if(ok)right++;
+  });
+  const total=q.fields.length;
+  if(right===total){fb(`All ${total} correct. Nice work.`);finish(checks===1);}
+  else fb(`${right} of ${total} correct. Fix the ones marked ✗, or tap the hint button.`);
+}
+
+function buildHints(){
+  const {p,ip,mask,ans}=q;
+  const full=Math.floor(p/8),extra=p%8,k=full;
+  const mo=(mask>>>(24-8*k))&255;
+  const block=256-mo;
+  const ipo=(ip>>>(24-8*k))&255;
+  const neto=Math.floor(ipo/block)*block;
+  const bco=neto+block-1;
+  const near=[];
+  for(let v=neto-2*block;v<=neto+2*block;v+=block){if(v>=0&&v<=255)near.push(v);}
+  return [
+    `The first ${p} bits are network bits and the last ${32-p} are host bits. That is ${full} full octet${full===1?'':'s'} of 255${extra?`, plus ${extra} extra 1-bit${extra===1?'':'s'} in octet ${full+1}`:''}. The "interesting" octet is the first one where the mask is not 255: octet ${k+1}.`,
+    `The mask is ${ans.mask}. In octet ${k+1} the mask value is ${mo}, so the block size is 256 − ${mo} = ${block}.`,
+    `Subnets in octet ${k+1} start at multiples of ${block}: …, ${near.join(', ')}, … Your address has ${ipo} in that octet, so it sits in the block that starts at ${neto}.`,
+    `Network address: copy the octets before octet ${k+1}, use ${neto} in octet ${k+1}, then 0 after it → ${ans.net}. Broadcast: ${neto} + ${block} − 1 = ${bco} in octet ${k+1}, then 255 after it → ${ans.bc}.`,
+    `First usable host = network + 1 → ${ans.first}. Last usable host = broadcast − 1 → ${ans.last}. There are ${32-p} host bits, so usable hosts = 2^${32-p} − 2 = ${ans.hosts}.`
+  ];
+}
+
+function hint(){
+  const H=buildHints();
+  if(hintsShown>=H.length)return;
+  const li=document.createElement('li');
+  li.textContent=H[hintsShown];
+  $('#hints').appendChild(li);
+  hintsShown++;
+  const b=$('#hintBtn');
+  if(hintsShown>=H.length){b.disabled=true;b.textContent='No more hints';}
+  else b.textContent=`Next hint (${hintsShown} of ${H.length} shown)`;
+}
+
+function showAnswer(){
+  if(done)return;
+  q.fields.forEach(f=>{
+    const inp=$('#f-'+f),m=$('#m-'+f);
+    inp.value=q.ans[f];
+    inp.classList.remove('ok','bad');
+    m.className='mark';m.textContent='Answer shown';
+  });
+  $('#hints').innerHTML='';
+  buildHints().forEach(t=>{const li=document.createElement('li');li.textContent=t;$('#hints').appendChild(li);});
+  fb('Here is the full worked solution. Move on when you are ready.');
+  finish(false);
+}
+
+document.querySelectorAll('input[name=level]').forEach(r=>r.addEventListener('change',newQuestion));
+$('#showBin').addEventListener('change',()=>{$('#bin').hidden=!$('#showBin').checked;});
+$('#form').addEventListener('submit',check);
+$('#hintBtn').addEventListener('click',hint);
+$('#showBtn').addEventListener('click',showAnswer);
+$('#nextBtn').addEventListener('click',newQuestion);
+newQuestion();
+})();
+</script>
+</body>
+</html>

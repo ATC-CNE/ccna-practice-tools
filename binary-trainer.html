@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Binary and Hex Trainer</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f7f9;--surface:#ffffff;--ink:#15202b;--muted:#506072;--line:#c9d2dc;
+  --accent:#1a5bb8;--accent-ink:#ffffff;--accent-soft:#e2ecfa;
+  --good:#146c34;--good-soft:#e0f3e6;--bad:#a8231b;--bad-soft:#fbe4e2;
+  --focus:#b85600;--note:#fff3d6;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0f151c;--surface:#17202a;--ink:#eaf0f6;--muted:#a6b3c2;--line:#34424f;
+    --accent:#7db0ff;--accent-ink:#0a1830;--accent-soft:#1b2e4b;
+    --good:#74d58f;--good-soft:#15321f;--bad:#ff8f86;--bad-soft:#3b1d1b;
+    --focus:#ffb454;--note:#3a2f13;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.125rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:1rem 1rem 3rem}
+.wires{display:flex;gap:4px;margin:0 0 1.25rem}
+.wires i{flex:1;height:10px;border-radius:5px;border:1px solid var(--line)}
+.wires .wo{background:repeating-linear-gradient(135deg,#fff 0 5px,#e8821c 5px 10px)}
+.wires .o{background:#e8821c}
+.wires .wg{background:repeating-linear-gradient(135deg,#fff 0 5px,#2e9e4f 5px 10px)}
+.wires .b{background:#2563b8}
+.wires .wb{background:repeating-linear-gradient(135deg,#fff 0 5px,#2563b8 5px 10px)}
+.wires .g{background:#2e9e4f}
+.wires .wn{background:repeating-linear-gradient(135deg,#fff 0 5px,#8a5a33 5px 10px)}
+.wires .n{background:#8a5a33}
+h1{font-size:1.75rem;line-height:1.2;margin:.2rem 0 .4rem}
+.lede{color:var(--muted);margin:0 0 1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:1.1rem}
+button,input{font:inherit;color:inherit}
+button{min-height:2.75rem;padding:.5rem 1rem;border-radius:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.55;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.controls{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;align-items:flex-end;margin-bottom:1rem}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.5rem}
+legend{font-weight:600;margin-bottom:.35rem;padding:0}
+.seg label{position:relative;display:inline-block}
+.seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer}
+.seg span{display:inline-block;padding:.45rem .9rem;border:2px solid var(--line);border-radius:10px;background:var(--surface)}
+.seg input:checked+span{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.seg input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.check{display:flex;align-items:center;gap:.5rem;min-height:2.75rem}
+.check input{width:1.3rem;height:1.3rem}
+
+.prompt{margin:0 0 .8rem;font-size:1.2rem}
+.big{font:700 2.2rem/1.1 var(--mono);padding:0 .2rem}
+.byte{display:flex;gap:.35rem;margin:.4rem 0 .8rem}
+.bit{flex:1 1 0;min-width:0;max-width:4.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.4rem 0;min-height:5rem;border:2px solid var(--line);border-radius:12px;background:var(--surface)}
+.bit.gap{margin-right:.8rem}
+.bit .pv{font-size:.95rem;color:var(--muted)}
+.bit .bv{font:700 1.7rem/1 var(--mono)}
+.nopv .pv{visibility:hidden}
+button.bit{cursor:pointer}
+.bit.on{background:var(--accent-soft);border-color:var(--accent)}
+.bit.on .bv{color:var(--accent)}
+.bit.look{outline:4px solid var(--focus);outline-offset:2px}
+.total{font:1.15rem var(--mono);margin:.2rem 0 .8rem;min-height:1.6rem}
+.answer label{display:block;font-weight:600;margin-bottom:.25rem}
+.answer input{width:100%;max-width:16rem;padding:.55rem .7rem;border:2px solid var(--line);border-radius:10px;background:var(--surface);font:1.3rem var(--mono)}
+.answer input.ok{border-color:var(--good);background:var(--good-soft)}
+.answer input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+#feedback{margin-top:.8rem;font-weight:600;min-height:1.5rem}
+#hints{margin:.7rem 0 0;padding-left:1.4rem}
+#hints li{margin:.5rem 0;padding:.5rem .7rem;background:var(--note);border-radius:8px;list-style-position:inside}
+.score{color:var(--muted);margin:1rem 0 0}
+details{margin-top:1rem}
+summary{cursor:pointer;font-weight:600;min-height:2.5rem;display:flex;align-items:center}
+.hexgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin:.4rem 0}
+.hexgrid div{border:1px solid var(--line);border-radius:8px;padding:.3rem .5rem;font-family:var(--mono);font-size:1rem;text-align:center;background:var(--surface)}
+@media (min-width:34rem){.hexgrid{grid-template-columns:repeat(8,1fr)}}
+</style>
+</head>
+<body>
+<main>
+  <div class="wires" aria-hidden="true"><i class="wo"></i><i class="o"></i><i class="wg"></i><i class="b"></i><i class="wb"></i><i class="g"></i><i class="wn"></i><i class="n"></i></div>
+  <h1>Binary and hex trainer</h1>
+  <p class="lede">Practice the number conversions behind IP addresses, subnet masks, and MAC addresses. No timer, and hints are always there.</p>
+
+  <div class="controls">
+    <fieldset class="seg">
+      <legend>Practice</legend>
+      <label><input type="radio" name="mode" value="build" checked><span>Decimal to binary</span></label>
+      <label><input type="radio" name="mode" value="read"><span>Binary to decimal</span></label>
+      <label><input type="radio" name="mode" value="hex"><span>Hex</span></label>
+    </fieldset>
+    <fieldset class="seg">
+      <legend>Numbers</legend>
+      <label><input type="radio" name="level" value="low" checked><span>0 to 15</span></label>
+      <label><input type="radio" name="level" value="masks"><span>Subnet mask values</span></label>
+      <label><input type="radio" name="level" value="any"><span>0 to 255</span></label>
+    </fieldset>
+  </div>
+  <div class="controls">
+    <label class="check"><input type="checkbox" id="showPV" checked> Show place values</label>
+    <label class="check" id="rtWrap"><input type="checkbox" id="showRT" checked> Show running total</label>
+  </div>
+
+  <section class="card" aria-live="off">
+    <div id="stage"></div>
+    <div class="actions">
+      <button type="button" class="primary" id="checkBtn">Check</button>
+      <button type="button" id="hintBtn">Give me a hint</button>
+      <button type="button" id="showBtn">Show the answer</button>
+      <button type="button" class="primary" id="nextBtn" hidden>Next question</button>
+    </div>
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <ol id="hints" aria-label="Hints"></ol>
+  </section>
+  <p class="score" id="score" hidden></p>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const PV=[128,64,32,16,8,4,2,1];
+const MASKS=[0,128,192,224,240,248,252,254,255];
+const rnd=n=>Math.floor(Math.random()*n);
+const hexd=n=>n.toString(16).toUpperCase();
+const hex2=n=>hexd(n).padStart(2,'0');
+let mode='build',t=-1,dir='d2h',bits=Array(8).fill(0),hintN=0,done=false,tries=0,finished=0,firstTry=0,hl=-1;
+
+const sum=()=>bits.reduce((a,b,i)=>a+b*PV[i],0);
+const onVals=()=>PV.filter((p,i)=>bits[i]);
+
+function pick(){
+  const lv=document.querySelector('input[name=level]:checked').value;
+  let n;
+  do{n=lv==='low'?rnd(16):lv==='masks'?MASKS[rnd(MASKS.length)]:rnd(256);}while(n===t);
+  return n;
+}
+
+function newQ(){
+  mode=document.querySelector('input[name=mode]:checked').value;
+  t=pick();
+  dir=Math.random()<.5?'d2h':'h2d';
+  bits=mode==='read'?PV.map(p=>(t&p)?1:0):Array(8).fill(0);
+  hintN=0;done=false;tries=0;hl=-1;
+  render();
+}
+
+function byteHtml(inter,pv){
+  return `<div class="byte${pv?'':' nopv'}" role="group" aria-label="Eight bits, place values 128 down to 1">`+
+    PV.map((p,i)=>{
+      const cls='bit'+(bits[i]?' on':'')+(i===3?' gap':'');
+      const inner=`<span class="pv"${pv?'':' aria-hidden="true"'}>${p}</span><span class="bv">${bits[i]}</span>`;
+      return inter
+        ?`<button type="button" class="${cls}" data-i="${i}" aria-pressed="${bits[i]?'true':'false'}" aria-label="${p} place, ${bits[i]?'on':'off'}">${inner}</button>`
+        :`<div class="${cls}" role="text" aria-label="${p} place, ${bits[i]?'1':'0'}">${inner}</div>`;
+    }).join('')+'</div>';
+}
+
+function answerInput(label,im){
+  return `<div class="answer"><label for="ans">${label}</label><input id="ans" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="${im}"></div>`;
+}
+
+function render(){
+  const pv=$('#showPV').checked;
+  $('#rtWrap').hidden=mode!=='build';
+  let h='';
+  if(mode==='build'){
+    h=`<p class="prompt">Turn on the bits that add up to <strong class="big">${t}</strong></p>${byteHtml(true,pv)}<p class="total" id="total"></p>`;
+  }else if(mode==='read'){
+    h=`<p class="prompt">What is this binary number in decimal?</p>${byteHtml(false,pv)}${answerInput('Decimal value','numeric')}`;
+  }else{
+    if(dir==='d2h')h=`<p class="prompt">Write <strong class="big">${t}</strong> in hexadecimal.</p>${answerInput('Hex value (digits 0 to 9 and A to F)','text')}`;
+    else h=`<p class="prompt">What is hexadecimal <strong class="big">${hex2(t)}</strong> in decimal?</p>${answerInput('Decimal value','numeric')}`;
+    let g='';for(let i=0;i<16;i++)g+=`<div>${hexd(i)} = ${i}</div>`;
+    h+=`<details><summary>Hex digit chart</summary><div class="hexgrid">${g}</div></details>`;
+  }
+  $('#stage').innerHTML=h;
+  $('#feedback').textContent='';$('#hints').innerHTML='';
+  $('#hintBtn').disabled=false;$('#hintBtn').textContent='Give me a hint';
+  $('#checkBtn').disabled=false;$('#showBtn').disabled=false;$('#nextBtn').hidden=true;
+  if(mode==='build')updateBits();
+  updateScore();
+  const a=$('#ans');if(a)a.focus({preventScroll:true});
+}
+
+function updateBits(){
+  document.querySelectorAll('.bit[data-i]').forEach(b=>{
+    const i=+b.dataset.i;
+    b.classList.toggle('on',!!bits[i]);
+    b.classList.toggle('look',i===hl);
+    b.setAttribute('aria-pressed',bits[i]?'true':'false');
+    b.setAttribute('aria-label',`${PV[i]} place, ${bits[i]?'on':'off'}`);
+    b.querySelector('.bv').textContent=bits[i];
+  });
+  const tot=$('#total');
+  if(tot){
+    const on=onVals();
+    tot.textContent=on.length?`${on.join(' + ')} = ${sum()}`:'No bits are on yet. Total = 0';
+    tot.hidden=!$('#showRT').checked;
+  }
+}
+
+function updateScore(){
+  const s=$('#score');
+  s.hidden=finished===0;
+  s.textContent=`Questions finished: ${finished}. Correct on the first check: ${firstTry}.`;
+}
+function fb(m){$('#feedback').textContent=m;}
+
+function finish(first){
+  done=true;finished++;if(first)firstTry++;
+  ['#checkBtn','#showBtn','#hintBtn'].forEach(s=>$(s).disabled=true);
+  $('#nextBtn').hidden=false;$('#nextBtn').focus();
+  hl=-1;if(mode==='build')updateBits();
+  updateScore();
+}
+
+function check(){
+  if(done)return;
+  tries++;
+  let ok=false,msg='';
+  if(mode==='build'){
+    const s=sum();ok=s===t;
+    msg=ok?`Correct. ${onVals().join(' + ')||'0'} = ${t}.`:s>t?`Your bits add up to ${s}, which is ${s-t} too much.`:`Your bits add up to ${s}, which is ${t-s} short.`;
+  }else{
+    const inp=$('#ans'),v=inp.value.trim();
+    if(mode==='hex'&&dir==='d2h'){
+      const x=v.toUpperCase().replace(/^0X/,'').replace(/^0+(?=.)/,'');
+      ok=x===hexd(t);
+    }else{
+      ok=/^\d+$/.test(v)&&Number(v)===t;
+    }
+    inp.classList.toggle('ok',ok);inp.classList.toggle('bad',!ok);
+    msg=ok?'Correct.':'Not yet. Check your work or use a hint.';
+  }
+  fb(msg);
+  if(ok)finish(tries===1);
+}
+
+function hintList(){
+  if(mode==='build'){
+    let rem=t;
+    return PV.map((p,i)=>{
+      if(rem>=p){const s=`Is ${p} ≤ ${rem}? Yes. Turn on the ${p} bit. Left over: ${rem-p}.`;rem-=p;return {i,txt:s};}
+      return {i,txt:`Is ${p} ≤ ${rem}? No. Leave the ${p} bit off.`};
+    });
+  }
+  if(mode==='read'){
+    const on=PV.filter(p=>t&p);
+    return [{txt:'Add up the place value of every bit that is a 1. Ignore the 0s.'},
+            {txt:on.length?`Here: ${on.join(' + ')} = ?`:'Every bit is 0, so the total is 0.'}];
+  }
+  if(dir==='d2h'){
+    const a=Math.floor(t/16),r=t%16;
+    return [{txt:`Divide by 16: ${t} ÷ 16 = ${a} remainder ${r}.`},
+            {txt:`Turn each number into a hex digit (10 = A, 11 = B, 12 = C, 13 = D, 14 = E, 15 = F): ${a} → ${hexd(a)} and ${r} → ${hexd(r)}.`}];
+  }
+  const d1=Math.floor(t/16),d2=t%16;
+  return [{txt:`The first digit counts groups of 16: ${d1} × 16 = ${d1*16}.`},
+          {txt:`Add the value of the second digit (${hexd(d2)} = ${d2}): ${d1*16} + ${d2} = ?`}];
+}
+
+function hint(){
+  const H=hintList();
+  if(hintN>=H.length)return;
+  const li=document.createElement('li');
+  li.textContent=H[hintN].txt;
+  $('#hints').appendChild(li);
+  if(mode==='build'){hl=H[hintN].i;updateBits();}
+  hintN++;
+  const b=$('#hintBtn');
+  if(hintN>=H.length){b.disabled=true;b.textContent='No more hints';}
+  else b.textContent=`Next hint (${hintN} of ${H.length} shown)`;
+}
+
+function showAnswer(){
+  if(done)return;
+  if(mode==='build'){
+    bits=PV.map(p=>(t&p)?1:0);updateBits();
+    fb(`Answer: ${onVals().join(' + ')||'0'} = ${t}`);
+  }else{
+    const inp=$('#ans');
+    inp.value=(mode==='hex'&&dir==='d2h')?hexd(t):String(t);
+    inp.classList.remove('ok','bad');
+    fb(`Answer: ${inp.value}`);
+  }
+  finish(false);
+}
+
+$('#stage').addEventListener('click',e=>{
+  const b=e.target.closest('.bit[data-i]');
+  if(!b||done||mode!=='build')return;
+  const i=+b.dataset.i;bits[i]=bits[i]?0:1;updateBits();
+});
+$('#stage').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ans'){e.preventDefault();check();}});
+document.querySelectorAll('input[name=mode],input[name=level]').forEach(r=>r.addEventListener('change',newQ));
+$('#showPV').addEventListener('change',()=>{const by=document.querySelector('.byte');if(by)by.classList.toggle('nopv',!$('#showPV').checked);document.querySelectorAll('.pv').forEach(p=>p.setAttribute('aria-hidden',$('#showPV').checked?'false':'true'));});
+$('#showRT').addEventListener('change',()=>{if(mode==='build')updateBits();});
+$('#checkBtn').addEventListener('click',check);
+$('#hintBtn').addEventListener('click',hint);
+$('#showBtn').addEventListener('click',showAnswer);
+$('#nextBtn').addEventListener('click',newQ);
+newQ();
+})();
+</script>
+</body>
+</html>

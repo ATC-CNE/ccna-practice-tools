@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Network Troubleshooting Lab</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f7f9;--surface:#ffffff;--ink:#15202b;--muted:#506072;--line:#c9d2dc;
+  --accent:#1a5bb8;--accent-ink:#ffffff;--accent-soft:#e2ecfa;
+  --good:#146c34;--good-soft:#e0f3e6;--bad:#a8231b;--bad-soft:#fbe4e2;
+  --focus:#b85600;--note:#fff3d6;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#0f151c;--surface:#17202a;--ink:#eaf0f6;--muted:#a6b3c2;--line:#34424f;
+    --accent:#7db0ff;--accent-ink:#0a1830;--accent-soft:#1b2e4b;
+    --good:#74d58f;--good-soft:#15321f;--bad:#ff8f86;--bad-soft:#3b1d1b;
+    --focus:#ffb454;--note:#3a2f13;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.125rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:50rem;margin:0 auto;padding:1rem 1rem 3rem}
+.wires{display:flex;gap:4px;margin:0 0 1.25rem}
+.wires i{flex:1;height:10px;border-radius:5px;border:1px solid var(--line)}
+.wires .wo{background:repeating-linear-gradient(135deg,#fff 0 5px,#e8821c 5px 10px)}
+.wires .o{background:#e8821c}
+.wires .wg{background:repeating-linear-gradient(135deg,#fff 0 5px,#2e9e4f 5px 10px)}
+.wires .b{background:#2563b8}
+.wires .wb{background:repeating-linear-gradient(135deg,#fff 0 5px,#2563b8 5px 10px)}
+.wires .g{background:#2e9e4f}
+.wires .wn{background:repeating-linear-gradient(135deg,#fff 0 5px,#8a5a33 5px 10px)}
+.wires .n{background:#8a5a33}
+h1{font-size:1.75rem;line-height:1.2;margin:.2rem 0 .4rem}
+h2{font-size:1.25rem;margin:0 0 .6rem}
+.lede{color:var(--muted);margin:0 0 1.25rem}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:1.1rem;margin-bottom:1rem}
+button,input,select{font:inherit;color:inherit}
+button{min-height:2.75rem;padding:.5rem 1rem;border-radius:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.story{margin:0 0 .8rem}
+.topo{display:flex;flex-direction:column;align-items:stretch;margin:.6rem 0}
+.node{border:2px solid var(--line);border-radius:12px;padding:.5rem .8rem;background:var(--bg);text-align:center;flex:1}
+.node strong{display:block}
+.node small{display:block;color:var(--muted);font-size:.9rem;line-height:1.35}
+.wire{align-self:center;width:6px;height:16px;background:#2563b8;border-radius:3px}
+@media (min-width:40rem){.topo{flex-direction:row;align-items:center}.wire{width:24px;height:6px}}
+
+.tests{display:flex;flex-direction:column;gap:.5rem}
+.test{display:flex;align-items:center;justify-content:space-between;gap:.8rem;text-align:left;width:100%}
+.test .tag{font-size:.85rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;white-space:nowrap}
+.test.ran{background:var(--accent-soft);border-color:var(--accent)}
+.test .ck{display:inline-block;min-width:1.2rem}
+.term{background:#0e1218;color:#d7e3f1;border:2px solid #2a3542;border-radius:12px;padding:.8rem 1rem;font:.95rem/1.45 var(--mono);height:20rem;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem}
+fieldset{border:0;margin:0;padding:0}
+legend{font-weight:600;margin-bottom:.4rem;padding:0}
+.opt{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem .7rem;border:2px solid var(--line);border-radius:10px;margin:.4rem 0;cursor:pointer;background:var(--surface)}
+.opt input{width:1.3rem;height:1.3rem;margin-top:.2rem;flex:none}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.msg{margin-top:.8rem;font-weight:600;min-height:1.5rem}
+.result{margin-top:.8rem;padding:.8rem 1rem;border-radius:10px;border:2px solid var(--line)}
+.result.ok{border-color:var(--good);background:var(--good-soft)}
+.result.bad{border-color:var(--bad);background:var(--bad-soft)}
+.result p{margin:.3rem 0}
+.note{padding:.6rem .8rem;background:var(--note);border-radius:10px;margin:.6rem 0 0}
+details{margin-top:.8rem}
+summary{cursor:pointer;font-weight:600;min-height:2.5rem;display:flex;align-items:center}
+select{padding:.5rem .7rem;border:2px solid var(--line);border-radius:10px;background:var(--surface);max-width:100%}
+.small{font-size:.95rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <div class="wires" aria-hidden="true"><i class="wo"></i><i class="o"></i><i class="wg"></i><i class="b"></i><i class="wb"></i><i class="g"></i><i class="wn"></i><i class="n"></i></div>
+  <h1>Network troubleshooting lab</h1>
+  <p class="lede">A user says: "I can't get to any websites." Run tests from PC1, read the results, and find the problem. There is no timer and no penalty for running more tests.</p>
+
+  <section class="card" aria-labelledby="th">
+    <h2 id="th">The network</h2>
+    <div class="topo" aria-label="PC1 connects to SW1, which connects to R1, which connects to the Internet">
+      <div class="node"><strong>PC1</strong><small>gets 192.168.10.x from DHCP<br>mask 255.255.255.0</small></div>
+      <span class="wire" aria-hidden="true"></span>
+      <div class="node"><strong>SW1</strong><small>switch</small></div>
+      <span class="wire" aria-hidden="true"></span>
+      <div class="node"><strong>R1</strong><small>LAN side 192.168.10.1</small></div>
+      <span class="wire" aria-hidden="true"></span>
+      <div class="node"><strong>Internet</strong><small>example: 8.8.8.8</small></div>
+    </div>
+    <p class="small">The school DNS server is 192.168.10.53 on the same LAN. The outputs below are simplified simulations of Windows commands.</p>
+  </section>
+
+  <section class="card" aria-labelledby="rh">
+    <h2 id="rh">Run a test</h2>
+    <div class="tests" id="tests"></div>
+    <details>
+      <summary>Method: troubleshoot from the bottom up</summary>
+      <p>Start at Layer 1 (cable and link), then Layer 3 (IP settings and pings by IP address), then Layer 7 (names and DNS). If a test passes, the layers below it are probably fine. The first test that fails shows you where to look.</p>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="oh">
+    <h2 id="oh">Command window</h2>
+    <pre class="term" id="term" tabindex="0" role="log" aria-label="Command output">Choose a test above to run it.
+</pre>
+    <div class="actions">
+      <button type="button" id="clear">Clear screen</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="dh">
+    <h2 id="dh">What is the problem?</h2>
+    <fieldset id="diag"><legend>Pick the most likely cause</legend></fieldset>
+    <div class="actions">
+      <button type="button" class="primary" id="submit">Check my diagnosis</button>
+      <button type="button" id="reveal" hidden>Reveal the answer</button>
+      <button type="button" id="newProb">New problem</button>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    <div id="result"></div>
+    <details>
+      <summary>Teacher controls</summary>
+      <p class="small">Choose a specific problem to project for the class.</p>
+      <select id="teacherSel" aria-label="Problem to use"></select>
+      <button type="button" id="teacherGo">Use this problem</button>
+    </details>
+  </section>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const rnd=n=>Math.floor(Math.random()*n);
+const PC='192.168.10.25',N='www.example.com',WEB='203.0.113.10';
+
+const stats=(ip,r)=>`\n\nPing statistics for ${ip}:\n    Packets: Sent = 4, Received = ${r}, Lost = ${4-r} (${(4-r)*25}% loss)`;
+const ping=(ip,time,ttl,label)=>`Pinging ${label?label+' ['+ip+']':ip} with 32 bytes of data:\n`+[0,1,2,3].map(()=>`Reply from ${ip}: bytes=32 time${time} TTL=${ttl}`).join('\n')+stats(ip,4);
+const unreach=(ip,from,label)=>`Pinging ${label?label+' ['+ip+']':ip} with 32 bytes of data:\n`+[0,1,2,3].map(()=>`Reply from ${from}: Destination host unreachable.`).join('\n')+stats(ip,4)+`\n\nNote: these replies came from your own PC (${from}), so the target never answered.`;
+const failed=ip=>`Pinging ${ip} with 32 bytes of data:\n`+[0,1,2,3].map(()=>'PING: transmit failed. General failure.').join('\n')+stats(ip,0);
+const nohost=n=>`Ping request could not find host ${n}. Please check the name and try again.`;
+const ipc=lines=>'Windows IP Configuration\n\nEthernet adapter Ethernet:\n\n'+lines.join('\n');
+const cfg=(ip,mask,gw,dns)=>ipc(['   Connection-specific DNS Suffix  . : school.local','   DHCP Enabled. . . . . . . . . . . : Yes',`   IPv4 Address. . . . . . . . . . . : ${ip}`,`   Subnet Mask . . . . . . . . . . . : ${mask}`,`   Default Gateway . . . . . . . . . : ${gw}`,`   DNS Servers . . . . . . . . . . . : ${dns}`]);
+const LINK_HEAD='Admin State    State          Type             Interface Name\n-------------------------------------------------------------------------\n';
+const LINK_UP=LINK_HEAD+'Enabled        Connected      Dedicated        Ethernet';
+const LINK_DOWN=LINK_HEAD+'Enabled        Disconnected   Dedicated        Ethernet';
+const LOOP=ping('127.0.0.1','<1ms',128);
+const NS_OK='Server:  dns1.school.local\nAddress:  192.168.10.53\n\nName:    '+N+'\nAddress:  '+WEB;
+const nsFail=a=>`Server:  UnKnown\nAddress:  ${a}\n\nDNS request timed out.\n    timeout was 2 seconds.\n*** Request to UnKnown timed out`;
+const NS_NONE='DNS request timed out.\n    timeout was 2 seconds.\nDefault Server:  UnKnown\nAddress:  ::1\n\n*** UnKnown can\'t find '+N+': Timed out';
+
+const TESTS=[
+ {id:'link',label:'Check the cable and link status',cmd:'netsh interface show interface',layer:'Layer 1'},
+ {id:'loop',label:'Ping your own computer (127.0.0.1)',cmd:'ping 127.0.0.1',layer:'Layer 3'},
+ {id:'ipconfig',label:'Show the IP settings',cmd:'ipconfig /all',layer:'Layer 3'},
+ {id:'gw',label:'Ping the default gateway that ipconfig shows',cmd:null,layer:'Layer 3'},
+ {id:'r1',label:'Ping R1 at 192.168.10.1 (from the diagram)',cmd:'ping 192.168.10.1',layer:'Layer 3'},
+ {id:'inet',label:'Ping an internet address (8.8.8.8)',cmd:'ping 8.8.8.8',layer:'Layer 3'},
+ {id:'name',label:'Ping a website name',cmd:'ping '+N,layer:'Layer 7'},
+ {id:'ns',label:'Look up a name with nslookup',cmd:'nslookup '+N,layer:'Layer 7'}
+];
+
+const FAULTS={
+ link:{
+  label:'The network cable is unplugged or the link is down',
+  why:'The interface shows Disconnected and ipconfig says Media disconnected. That is a Layer 1 problem, so nothing above it can work.',
+  fix:'Plug the cable in firmly or swap it, then check for a link light on the switch port.',
+  gwCmd:'ping <default gateway>',
+  out:{link:LINK_DOWN,loop:LOOP,
+   ipconfig:ipc(['   Media State . . . . . . . . . . . : Media disconnected','   Connection-specific DNS Suffix  . : ']),
+   gw:'No default gateway is available because the adapter is disconnected.',
+   r1:failed('192.168.10.1'),inet:failed('8.8.8.8'),name:nohost(N),ns:NS_NONE}},
+ dhcp:{
+  label:'PC1 did not get an address from DHCP (it has a 169.254 address)',
+  why:'PC1 has a 169.254.x.x address and no default gateway. That is an automatic private address (APIPA) that Windows picks when it cannot reach a DHCP server.',
+  fix:'Check the DHCP server, the switch port VLAN and any DHCP relay on R1. Then run ipconfig /release and ipconfig /renew.',
+  gwCmd:'ping <default gateway>',
+  out:{link:LINK_UP,loop:LOOP,
+   ipconfig:ipc(['   Connection-specific DNS Suffix  . : ','   DHCP Enabled. . . . . . . . . . . : Yes','   Autoconfiguration IPv4 Address. . : 169.254.37.112','   Subnet Mask . . . . . . . . . . . : 255.255.0.0','   Default Gateway . . . . . . . . . : ']),
+   gw:'No default gateway is configured on this PC, so there is nothing to ping.',
+   r1:unreach('192.168.10.1','169.254.37.112'),inet:failed('8.8.8.8'),name:nohost(N),ns:NS_NONE}},
+ gateway:{
+  label:'The default gateway is set to the wrong address',
+  why:'PC1 is configured with gateway 192.168.10.254, but R1 is at 192.168.10.1. PC1 can reach R1 directly, and nslookup works because DNS is on the LAN, but traffic that must leave the LAN has nowhere to go.',
+  fix:'Set the default gateway to 192.168.10.1, or fix the router option in the DHCP scope.',
+  gwCmd:'ping 192.168.10.254',
+  out:{link:LINK_UP,loop:LOOP,
+   ipconfig:cfg(PC,'255.255.255.0','192.168.10.254','192.168.10.53'),
+   gw:unreach('192.168.10.254',PC),
+   r1:ping('192.168.10.1','<1ms',64),
+   inet:unreach('8.8.8.8',PC),
+   name:unreach(WEB,PC,N),ns:NS_OK}},
+ mask:{
+  label:'The subnet mask is wrong',
+  why:'The mask is 255.255.255.252 (/30), so PC1 thinks 192.168.10.1 is on a different network. It should be 255.255.255.0 (/24).',
+  fix:'Correct the subnet mask to 255.255.255.0 (and check the DHCP scope if the address came from DHCP).',
+  gwCmd:'ping 192.168.10.1',
+  out:{link:LINK_UP,loop:LOOP,
+   ipconfig:cfg(PC,'255.255.255.252','192.168.10.1','192.168.10.53'),
+   gw:unreach('192.168.10.1',PC),
+   r1:unreach('192.168.10.1',PC),
+   inet:unreach('8.8.8.8',PC),
+   name:nohost(N),ns:nsFail('192.168.10.53')}},
+ dns:{
+  label:'The DNS server address is wrong',
+  why:'Pings by IP address work, but names fail. ipconfig lists DNS server 192.168.10.35, not 192.168.10.53. Everything through Layer 3 is fine.',
+  fix:'Set the DNS server to 192.168.10.53, or fix the DNS option in the DHCP scope.',
+  gwCmd:'ping 192.168.10.1',
+  out:{link:LINK_UP,loop:LOOP,
+   ipconfig:cfg(PC,'255.255.255.0','192.168.10.1','192.168.10.35'),
+   gw:ping('192.168.10.1','<1ms',64),
+   r1:ping('192.168.10.1','<1ms',64),
+   inet:ping('8.8.8.8','=18ms',117),
+   name:nohost(N),ns:nsFail('192.168.10.35')}}
+};
+const KEYS=Object.keys(FAULTS);
+
+let fault=null,ran=new Set(),runs=0,wrongs=0,solved=false;
+
+/* build static UI */
+$('#tests').innerHTML=TESTS.map(t=>`<button type="button" class="test" data-id="${t.id}"><span><span class="ck" aria-hidden="true"></span>${t.label}</span><span class="tag">${t.layer}</span></button>`).join('');
+$('#diag').insertAdjacentHTML('beforeend',KEYS.map(k=>`<label class="opt"><input type="radio" name="d" value="${k}"><span>${FAULTS[k].label}</span></label>`).join(''));
+$('#teacherSel').innerHTML=KEYS.map(k=>`<option value="${k}">${FAULTS[k].label}</option>`).join('');
+
+function newProblem(key){
+  let k=key;
+  if(!k){do{k=KEYS[rnd(KEYS.length)];}while(k===fault&&KEYS.length>1);}
+  fault=k;ran=new Set();runs=0;wrongs=0;solved=false;
+  $('#term').textContent='Choose a test above to run it.\n';
+  $('#msg').textContent='';$('#result').innerHTML='';
+  $('#reveal').hidden=true;$('#submit').disabled=false;
+  document.querySelectorAll('input[name=d]').forEach(r=>{r.checked=false;r.disabled=false;});
+  document.querySelectorAll('.test').forEach(b=>{b.classList.remove('ran');b.querySelector('.ck').textContent='';});
+}
+
+function run(id){
+  const t=TESTS.find(x=>x.id===id),F=FAULTS[fault];
+  const cmd=t.cmd||F.gwCmd;
+  const term=$('#term');
+  if(runs===0)term.textContent='';
+  term.textContent+=`C:\\> ${cmd}\n${F.out[id]}\n\n`;
+  term.scrollTop=term.scrollHeight;
+  runs++;ran.add(id);
+  const b=document.querySelector(`.test[data-id="${id}"]`);
+  b.classList.add('ran');b.querySelector('.ck').textContent='✓';
+}
+
+function showResult(good){
+  const F=FAULTS[fault];
+  const r=$('#result');
+  r.innerHTML='';
+  const box=document.createElement('div');
+  box.className='result '+(good?'ok':'bad');
+  const mk=(label,text)=>{const p=document.createElement('p');const s=document.createElement('strong');s.textContent=label+' ';p.appendChild(s);p.appendChild(document.createTextNode(text));box.appendChild(p);};
+  mk(good?'Correct.':'The answer:',F.label+'.');
+  mk('Why:',F.why);
+  mk('Fix:',F.fix);
+  mk('Tests you ran:',String(runs));
+  r.appendChild(box);
+}
+
+function finishProblem(){
+  solved=true;
+  $('#submit').disabled=true;$('#reveal').hidden=true;
+  document.querySelectorAll('input[name=d]').forEach(r=>r.disabled=true);
+}
+
+$('#tests').addEventListener('click',e=>{const b=e.target.closest('.test');if(b&&!solved)run(b.dataset.id);});
+$('#clear').addEventListener('click',()=>{$('#term').textContent='';});
+$('#submit').addEventListener('click',()=>{
+  if(solved)return;
+  const sel=document.querySelector('input[name=d]:checked');
+  if(!sel){$('#msg').textContent='Pick one of the choices first.';return;}
+  if(runs===0){$('#msg').textContent='Run at least one test first so you have evidence.';return;}
+  if(sel.value===fault){
+    $('#msg').textContent='';
+    showResult(true);finishProblem();
+  }else{
+    wrongs++;
+    $('#msg').textContent='Not that one. Look at the results again. Which test is the first one that fails or looks different from a healthy PC?';
+    if(wrongs>=2)$('#reveal').hidden=false;
+  }
+});
+$('#reveal').addEventListener('click',()=>{
+  $('#msg').textContent='';showResult(false);finishProblem();
+});
+$('#newProb').addEventListener('click',()=>newProblem());
+$('#teacherGo').addEventListener('click',()=>newProblem($('#teacherSel').value));
+
+newProblem();
+})();
+</script>
+</body>
+</html>
