@@ -302,6 +302,20 @@ button.hx{cursor:pointer}
 .mcs .mc{margin-bottom:.8rem}
 .mq,.fb,.why,.plain p,.qline{overflow-wrap:anywhere}
 .prob .btn{flex:none}
+.noexam .exam{display:none!important}
+.exam{background:var(--card);background:color-mix(in srgb,var(--yellow) 22%,var(--card));border:2px solid var(--yellow);border-radius:14px;padding:.7rem 1rem;margin:0 0 1rem}
+.exam p{margin:.3rem 0 0}
+.lvl{display:inline-block;border-radius:99px;padding:.1rem .7rem;font-weight:800;font-size:.85rem;color:var(--on-bright);margin:0 .4rem .3rem 0}
+.lvl.core{background:var(--yellow)}.lvl.idea{background:var(--sky)}.lvl.extra{background:var(--line);color:var(--ink)}
+.chip{display:inline-block;border:2px solid var(--line);border-radius:99px;padding:.05rem .6rem;font-size:.85rem;background:var(--card);margin:0 .3rem .3rem 0;font-weight:600}
+.exam .chip{border-color:var(--ink)}
+.mc>.chip{margin-bottom:.4rem}
+.examcard{border-color:var(--yellow)}
+.map td,.map th{vertical-align:top;font-size:.95rem}
+.map .jumpbtn{min-height:2rem;padding:.15rem .6rem;font-size:.85rem;margin:0 .25rem .25rem 0}
+.map .cov{white-space:nowrap;font-weight:700}
+.tools button.on{background:var(--violet);color:var(--on-violet);border-color:var(--violet)}
+mark.hl{background:var(--yellow);color:var(--on-bright);border-radius:4px;padding:0 .2rem;font-weight:800}
 .euiSteps code{word-break:normal;overflow-wrap:anywhere}
 .top .jump{flex:1 1 8rem;min-width:0}
 .top .jump select{width:100%;max-width:none}
@@ -320,9 +334,10 @@ button.hx{cursor:pointer}
 
 <header class="top">
   <span class="brand">Module 12 · IPv6</span>
-  <div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"><div class="bar" id="bar"></div></div>
+  <div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="21" aria-valuenow="1"><div class="bar" id="bar"></div></div>
   <span class="mini" id="mini" title="Interactive activities completed">0 done</span>
   <span class="tools row" style="gap:.4rem">
+    <button class="btn on" type="button" id="examBtn" aria-pressed="true" title="Show or hide the CCNA exam notes">🎯 Exam</button>
     <button class="btn" type="button" id="bigText" aria-pressed="false" title="Make the text bigger">A+</button>
     <button class="btn" type="button" id="speak" title="Read this section out loud">🔊</button>
   </span>
@@ -355,6 +370,16 @@ button.hx{cursor:pointer}
   <div class="card big-pad">
     <h3>By the end, you can answer these. Tap one to jump to it.</h3>
     <ol class="obj" id="objList"></ol>
+  </div>
+  <div class="card examcard" id="examCard">
+    <h3>🎯 How this connects to the CCNA exam</h3>
+    <p style="margin-top:0">This module builds the IPv6 addressing skills behind the Cisco <strong>CCNA (200-301)</strong>. Look for the yellow <strong>🎯 exam notes</strong> on each page. They show which exam topics that page supports and what to be able to do. Cisco's current exam is <strong>v1.1</strong> (last test date February 2, 2027). <strong>v2.0</strong> starts February 3, 2027 and asks you to <em>troubleshoot</em> IPv6 more than describe it. Both versions are tagged, so this works for either one.</p>
+    <div class="row" style="gap:.5rem;margin:.3rem 0"><span class="lvl core">🎯 Exam core</span><span>named in the exam topics</span></div>
+    <div class="row" style="gap:.5rem;margin:.3rem 0"><span class="lvl idea">💡 Know the idea</span><span>supports an exam topic at lighter depth</span></div>
+    <div class="row" style="gap:.5rem;margin:.3rem 0"><span class="lvl extra">📚 Course extra</span><span>not named in the blueprints, but useful context</span></div>
+    <div class="tabs" role="group" aria-label="Exam version" style="margin-top:.6rem"><button class="btn tab" type="button" id="emT11" aria-pressed="true">CCNA v1.1 topics</button><button class="btn tab" type="button" id="emT20" aria-pressed="false">CCNA v2.0 topics</button></div>
+    <div class="scroll"><table class="tbl map" id="examMap"></table></div>
+    <p class="note">Topic wording is from Cisco's published 200-301 exam topics. Which page covers each topic is my own mapping. Cisco can change the blueprint, so check Cisco's exam page before you book.</p>
   </div>
   <details class="acc">
     <summary>📚 Word bank (tap a term to see what it means)</summary>
@@ -607,6 +632,14 @@ button.hx{cursor:pointer}
     <p style="margin-top:0">Hint: look for <code>fffe</code> in the middle of the interface ID.</p>
     <div id="eqGame"></div>
   </div>
+  <div class="card" id="euiDrill">
+    <h3>🎯 Your turn: convert by hand (an exam skill)</h3>
+    <p style="margin-top:0">Turn this MAC address into the <strong>modified EUI-64 interface ID</strong>. Remember: split it, insert <code>fffe</code>, flip the 7th bit of the first byte.</p>
+    <div class="bigaddr" id="edMac"></div>
+    <div class="row"><input type="text" id="edIn" aria-label="Your interface ID" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxx:xxxx:xxxx:xxxx" style="flex:1 1 14rem;font-family:var(--mono)"><button class="btn primary" type="button" id="edCheck">Check</button><button class="btn" type="button" id="edHint">Hint</button><button class="btn ghost" type="button" id="edShow">Show answer</button><button class="btn" type="button" id="edNew">Another</button></div>
+    <ol class="euiSteps" id="edSteps" aria-live="polite"></ol>
+    <p class="fb" id="edFb" role="status" aria-live="polite"></p>
+  </div>
   <p class="note">Windows has used random interface IDs since Windows Vista. To make sure an address isn't already taken, a device runs duplicate address detection (DAD), like asking "does anyone else have this?"</p>
   <div class="mcs" data-set="iid"></div>
 </section>
@@ -618,7 +651,7 @@ button.hx{cursor:pointer}
   <div class="plain speak"><span class="lbl">In plain English</span><p>A device builds its own link-local address using <code>fe80::</code> plus an interface ID (EUI-64 or random). Windows usually uses the same method for its global and link-local addresses. A Cisco router makes an LLA by itself as soon as you give an interface a GUA, using EUI-64. That address is long and hard to remember, so people often type routers' LLAs by hand, like <code>fe80::1:1</code>. Three commands help you verify: <code>show ipv6 interface brief</code>, <code>show ipv6 route</code>, and <code>ping</code>.</p></div>
   <div class="card">
     <h3>Read the output</h3>
-    <div class="tabs" role="group" aria-label="Choose an output"><button class="btn tab" type="button" data-o="0" aria-pressed="true">Windows ipconfig</button><button class="btn tab" type="button" data-o="1" aria-pressed="false">show ipv6 interface brief</button><button class="btn tab" type="button" data-o="2" aria-pressed="false">show ipv6 route</button></div>
+    <div class="tabs" role="group" aria-label="Choose an output"><button class="btn tab" type="button" data-o="0" aria-pressed="true">Windows ipconfig</button><button class="btn tab" type="button" data-o="3" aria-pressed="false">macOS ifconfig</button><button class="btn tab" type="button" data-o="4" aria-pressed="false">Linux ip -6 addr</button><button class="btn tab" type="button" data-o="1" aria-pressed="false">show ipv6 interface brief</button><button class="btn tab" type="button" data-o="2" aria-pressed="false">show ipv6 route</button></div>
     <div class="out" id="outBox"></div>
     <p class="qline" id="outQ" aria-live="polite"></p>
     <p class="fb" id="outFb" aria-live="polite"></p>
@@ -638,11 +671,17 @@ button.hx{cursor:pointer}
     <div class="row" id="mcBtns"></div>
     <p class="fb" id="mcMsg" aria-live="polite" style="font-size:1.05rem"></p>
   </div>
-  <div class="card">
-    <h3>Bonus peek: build a solicited-node address</h3>
-    <p style="margin-top:0">Take <code>ff02::1:ff</code> and add the last 24 bits (6 hex digits) of the unicast address.</p>
-    <div class="row"><input type="text" id="snIn" aria-label="Unicast address" value="2001:db8:acad:1:fe99:47ff:fe75:cee0" autocomplete="off" spellcheck="false" style="flex:1 1 16rem;font-family:var(--mono)"><button class="btn primary" type="button" id="snGo">Build it</button></div>
+  <div class="card" id="snCard">
+    <h3>Bonus peek: how a solicited-node address is built</h3>
+    <div class="plain speak"><span class="lbl">The problem</span><p>Say PC1 knows PC2's IPv6 address but needs its MAC address (IPv6's version of ARP). IPv6 has no broadcast. Sending to <code>ff02::1</code> would still make <em>every</em> device stop and read the message.</p></div>
+    <div class="plain speak"><span class="lbl">The trick</span><p>Every device also listens to one extra multicast address that is <strong>made from the end of its own unicast address</strong>. To ask about PC2, PC1 sends to that special address. It's like calling out "everyone whose locker number ends in 4-2-7" instead of the whole school. Only a few devices share those digits, and the network card of everyone else ignores the message without bothering the CPU.</p></div>
+    <p style="margin-bottom:.3rem"><strong>The recipe:</strong> take the fixed front <code>ff02::1:ff</code> and add the <strong>last 24 bits</strong> (the last <strong>6 hex digits</strong>) of the unicast address.</p>
+    <label for="snIn"><strong>Try it with any unicast address:</strong></label>
+    <div class="row"><input type="text" id="snIn" aria-label="Unicast address" value="2001:db8:acad:1:fe99:47ff:fe75:cee0" autocomplete="off" spellcheck="false" style="flex:1 1 16rem;font-family:var(--mono)"><button class="btn primary" type="button" id="snGo">Build it</button><button class="btn ghost" type="button" id="snReset" aria-label="Reset the solicited-node builder">↺ Reset</button></div>
+    <div class="row" style="margin-top:.5rem"><button class="btn" type="button" id="snEx1">The address from the EUI-64 step</button><button class="btn" type="button" id="snEx2">fe80::1:1 (a router LLA)</button></div>
+    <ol class="euiSteps" id="snSteps" aria-live="polite"></ol>
     <p class="fb ok" id="snOut" aria-live="polite" style="font-family:var(--mono)"></p>
+    <p class="note">Good to know: two devices whose addresses end in the same six digits share one solicited-node address. That's fine. They both hear the message, and only the real target answers. Your book says the benefit is that this address maps to a special Ethernet multicast address, so the network card can filter the frame without passing it up to IPv6 first.</p>
   </div>
   <div class="mcs" data-set="mcast"></div>
 </section>
@@ -696,8 +735,16 @@ button.hx{cursor:pointer}
   <div class="mcs" data-set="quiz"></div>
 </section>
 
-<!-- 20 SUMMARY -->
-<section class="step" id="s20" data-title="Summary and next steps">
+<!-- 20 EXAM PRACTICE -->
+<section class="step" id="s20" data-title="Exam practice: troubleshoot it">
+  <div class="head"><h2>Exam practice: troubleshoot it</h2><div class="sticker">Read the evidence.<br>Find the cause.</div></div>
+  <p class="secnote">CCNA-style questions in my own words (not real exam questions)</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>The CCNA v1.1 mostly asks you to <em>describe</em> and <em>configure</em>. The CCNA v2.0 adds <em>troubleshoot</em> and <em>diagnose</em>. So each question below shows a symptom or some output. Read it like a detective, then pick the cause or the right answer. Every question is tagged with the exam topics it practices.</p></div>
+  <div class="mcs" data-set="exam"></div>
+</section>
+
+<!-- 21 SUMMARY -->
+<section class="step" id="s21" data-title="Summary and next steps">
   <div class="head"><h2>Summary and next steps</h2><div class="sticker">You made it</div></div>
   <div class="tl">
     <div>🌎 IPv4 ran low on addresses. IPv6 uses 128-bit addresses, and the two coexist using dual stack, tunneling, and translation.</div>
@@ -709,6 +756,13 @@ button.hx{cursor:pointer}
     <div>✅ Verify with <code>show ipv6 interface brief</code>, <code>show ipv6 route</code>, and <code>ping</code>.</div>
     <div>📢 Multicast starts with <code>ff</code>: <code>ff02::1</code> all nodes, <code>ff02::2</code> all routers.</div>
     <div>🔢 Subnet by counting up the subnet ID in hex.</div>
+  </div>
+  <div class="card exam">
+    <h3>🎯 CCNA readiness check</h3>
+    <p style="margin-top:0">Tick each skill once you can do it without looking. Tap <em>Review</em> to jump back.</p>
+    <ul class="tasklist" id="ckList"></ul>
+    <p class="fb ok" id="ckMsg" aria-live="polite"></p>
+    <p class="note">Next exam topics to study after this module: IPv6 static routing (v1.1 topic 3.3, v2.0 topic 3.2) and, for v2.0, OSPFv3 for IPv6 (topic 3.3).</p>
   </div>
   <div class="card">
     <h3>Time for hands-on practice</h3>
@@ -737,7 +791,7 @@ button.hx{cursor:pointer}
 
 <nav class="pager" aria-label="Lesson navigation">
   <button class="btn" type="button" id="back">← Back</button>
-  <span class="count" id="count">1 of 20</span>
+  <span class="count" id="count">1 of 21</span>
   <button class="btn primary" type="button" id="next">Next →</button>
 </nav>
 
@@ -868,7 +922,7 @@ const Score={
 };
 function updateFinal(){$('#finalScore').textContent=`Activities completed: ${Score.finished}. Right on the first try: ${Score.firstTry}.`;}
 function updateQuizScore(){$('#quizScore').textContent=`First-try score: ${Score.countFirst('q-')} right out of ${Score.count('q-')} answered (of 15).`;}
-function detailText(){return `Quiz first try: ${Score.countFirst('q-')}/${Score.count('q-')}; check-yourself: ${Score.countFirst('mc-')}/${Score.count('mc-')}; practice done: ${Score.count('pr-')}; router lab: ${Score.done.has('sim')?'done':'not done'}`;}
+function detailText(){return `Quiz first try: ${Score.countFirst('q-')}/${Score.count('q-')}; check-yourself: ${Score.countFirst('mc-')}/${Score.count('mc-')}; practice done: ${Score.count('pr-')}; exam practice: ${Score.countFirst('ex-')}/${Score.count('ex-')}; router lab: ${Score.done.has('sim')?'done':'not done'}`;}
 
 /* =============== Stepper =============== */
 const steps=$$('.step');
@@ -903,6 +957,11 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight')go(cur+1);
   if(e.key==='ArrowLeft')go(cur-1);
 });
+$('#examBtn').addEventListener('click',e=>{
+  const off=!document.body.classList.contains('noexam');
+  document.body.classList.toggle('noexam',off);
+  e.currentTarget.setAttribute('aria-pressed',off?'false':'true');e.currentTarget.classList.toggle('on',!off);
+});
 $('#bigText').addEventListener('click',e=>{
   big=!big;document.documentElement.style.fontSize=big?'125%':'';
   e.currentTarget.setAttribute('aria-pressed',big?'true':'false');e.currentTarget.classList.toggle('on',big);
@@ -915,10 +974,12 @@ $('#speak').addEventListener('click',()=>{
 });
 
 /* =============== Helpers: tabs, multiple choice, click tasks =============== */
-function mcq(host,{q,opts,ans,why,key,shuf=true,mono=false}){
+function mcq(host,{q,opts,ans,why,key,shuf=true,mono=false,pre=null,tag=null}){
   const d=document.createElement('div');d.className='card mc';
-  d.innerHTML='<p class="mq"></p><div class="choices"></div><p class="fb" role="status" aria-live="polite"></p>';
+  d.innerHTML=(tag?'<span class="chip"></span>':'')+'<p class="mq"></p>'+(pre?'<div class="out"><pre></pre></div>':'')+'<div class="choices"></div><p class="fb" role="status" aria-live="polite"></p>';
   d.querySelector('.mq').textContent=q;
+  if(pre)d.querySelector('pre').textContent=pre;
+  if(tag)d.querySelector('.chip').textContent=tag;
   const box=d.querySelector('.choices'),fb=d.querySelector('.fb');
   const order=opts.map((o,i)=>i);if(shuf)shuffle(order);
   let wrong=0,done=false;
@@ -977,9 +1038,22 @@ const MC={
   {key:'mc-vf2',q:'Why don\'t link-local addresses show up as routes in the IPv6 routing table?',opts:['They are not routable','They are too long','They are encrypted','They only work on Windows'],ans:0,why:'LLAs are not routable, so routers do not install them as routes.'}],
  mcast:[
   {key:'mc-mc1',q:'Which multicast address do RS messages go to?',opts:['ff02::2 (all routers)','ff02::1 (all nodes)','fe80::1','::1'],ans:0,mono:true,why:'Hosts send RS to all routers so only routers have to answer.'},
-  {key:'mc-mc2',q:'Can a multicast address be used as a SOURCE address?',opts:['No, only as a destination','Yes, always','Only on routers'],ans:0,why:'Multicast addresses are destination-only.',shuf:false}],
+  {key:'mc-mc2',q:'Can a multicast address be used as a SOURCE address?',opts:['No, only as a destination','Yes, always','Only on routers'],ans:0,why:'Multicast addresses are destination-only.',shuf:false},
+  {key:'mc-mc3',q:'To build a solicited-node multicast address, which part of the unicast address do you copy?',opts:['The last 24 bits (6 hex digits)','The first 64 bits (the prefix)','The subnet ID','The entire address'],ans:0,why:'Only the last 6 hex digits are used, glued onto ff02::1:ff.'}],
  subnet:[
   {key:'mc-sn1',q:'With a /48 prefix, how many /64 subnets can you make?',opts:['65,536','256','1,024','4,294,967,296'],ans:0,why:'16 subnet-ID bits give 2^16 = 65,536 subnets.',shuf:false}],
+ exam:[
+  {key:'ex-1',tag:'v1.1 1.8 · v2.0 1.4',q:'PC1 shows only a link-local address and no default gateway, while R1\'s LAN interface has a valid global address. What is the most likely cause?',pre:'C:\\> ipconfig\nEthernet adapter Ethernet:\n   Link-local IPv6 Address . . . : fe80::50a5:8a35:a5bb:66e1\n   Default Gateway . . . . . . . :\n\nR1# show running-config | include ipv6 unicast\nR1#',opts:['R1 does not have ipv6 unicast-routing, so it sends no RA messages','PC1 needs a /56 prefix length','A MAC address is too short for IPv6','Windows does not allow link-local addresses'],ans:0,why:'Without ipv6 unicast-routing the router does not send RAs, so PC1 never learns the prefix or gateway and keeps only its link-local address.'},
+  {key:'ex-2',tag:'v1.1 1.8 · v2.0 1.4 (prefix sizing)',q:'Hosts on this LAN do not build a global address with SLAAC. Which change fixes it?',pre:'R1(config)# interface g0/0/0\nR1(config-if)# ipv6 address 2001:db8:acad:10::1/56\nR1(config-if)# no shutdown',opts:['Change the prefix length to /64','Change the prefix length to /48','Add a dotted subnet mask','Add a broadcast address'],ans:0,mono:true,why:'SLAAC builds a 64-bit interface ID, so the LAN prefix must be /64.',shuf:false},
+  {key:'ex-3',tag:'v1.1 1.8 · v2.0 1.4 / 1.6',q:'PC1 cannot ping its default gateway. Why?',pre:'PC1:     IPv6 address 2001:db8:acad:2::10/64\n         Default gateway 2001:db8:acad:1::1\nR1 g0/0/0 (LAN): 2001:db8:acad:1::1/64',opts:['PC1 is in subnet 2, but the gateway is in subnet 1','The prefix length should be /128','Link-local addresses are turned off','The interface ID is too long'],ans:0,why:'The fourth hextet (the subnet ID) differs: 2 on the PC and 1 on the router, so they are on different /64 networks.'},
+  {key:'ex-4',tag:'v1.1 1.9.d · v2.0 1.4 (modified EUI 64)',q:'A router interface has the MAC address 5c3a.45a1.2b0c. Which link-local address does modified EUI-64 produce?',opts:['fe80::5e3a:45ff:fea1:2b0c','fe80::5c3a:45ff:fea1:2b0c','fe80::5e3a:45a1:fffe:2b0c','fe80::5d3a:45ff:fea1:2b0c'],ans:0,mono:true,why:'Split the MAC, insert fffe in the middle, and flip the 7th bit of the first byte: 5c becomes 5e.'},
+  {key:'ex-5',tag:'v2.0 4.4 (AAAA records)',q:'Which DNS record type maps a hostname to an IPv6 address?',opts:['AAAA','A','PTR','MX'],ans:0,why:'An A record holds an IPv4 address. An AAAA record holds an IPv6 address.'},
+  {key:'ex-6',tag:'v1.1 1.10 · v2.0 1.6',q:'What do the two successful pings prove, given that the third one fails?',pre:'C:\\> ping ::1\nReply from ::1: time<1ms\n\nC:\\> ping fe80::1%12\nReply from fe80::1%12: time=1ms\n\nC:\\> ping 2001:db8:acad:1::1\nPING: transmit failed. General failure.\n\nC:\\> ipconfig  (shows only a fe80:: address)',opts:['The IPv6 stack and the link to the router work. The host just has no global address','The IPv6 stack is broken','The router is down','The DNS server is wrong'],ans:0,why:'::1 proves the local stack works and the link-local ping proves the link works. The failure is the missing global address (no RA or DHCPv6).'},
+  {key:'ex-7',tag:'v1.1 1.9.a',q:'Which of these is a valid global unicast address?',opts:['2001:db8:1::5','fe80::5','ff02::5','fd00::5'],ans:0,mono:true,why:'Global unicast addresses fall in 2000::/3 (they start with 2 or 3). fe80 is link-local, ff02 is multicast, and fd00 is unique local.'},
+  {key:'ex-8',tag:'v1.1 3.1 · v2.0 3.1',q:'What does the L route mean?',pre:'C   2001:DB8:ACAD:1::/64 [0/0]\n     via GigabitEthernet0/0/0, directly connected\nL   2001:DB8:ACAD:1::1/128 [0/0]\n     via GigabitEthernet0/0/0, receive',opts:["It is a local route for the router's own interface address (a /128)",'It is a link-local address','It is a learned OSPF route','It is a default route'],ans:0,why:'C is the connected network. L is the specific address on the router\'s interface, installed as a /128. It is not a link-local address.'},
+  {key:'ex-9',tag:'v2.0 4.7.d (RA guard)',q:'Which Layer 2 security feature blocks rogue Router Advertisement messages?',opts:['RA guard','Port security','DHCP snooping','Dynamic ARP inspection'],ans:0,why:'RA guard filters RA messages that arrive on ports where no router should be. It protects the RA process you learned on the RS/RA page.'},
+  {key:'ex-10',tag:'v2.0 1.4 · 2.4',q:'Interface G0/0/0 has the right address but traffic does not flow. What fixes it?',pre:'R1# show ipv6 interface brief\nGigabitEthernet0/0/0   [administratively down/down]\n    FE80::1:1\n    2001:DB8:ACAD:1::1',opts:['Enter no shutdown on the interface','Change the address to a /48','Delete the link-local address','Add ipv6 unicast-routing to the interface'],ans:0,mono:true,why:'Administratively down means the interface was shut down by command. no shutdown brings it up.'}
+ ],
  quiz:[
   {key:'q-1',q:'Which problem was the biggest reason IPv6 was created?',opts:['IPv4 was running out of addresses','IPv4 was too slow on Wi-Fi','IPv4 cables were too short','IPv4 could not use hexadecimal'],ans:0,why:'The shrinking supply of IPv4 addresses drove the move to IPv6.'},
   {key:'q-2',q:'How many bits are in one hextet?',opts:['4','8','16','32'],ans:2,why:'A hextet is 4 hex digits, and each digit is 4 bits, so 16 bits.',shuf:false},
@@ -999,6 +1073,116 @@ const MC={
  ]
 };
 $$('.mcs').forEach(h=>{(MC[h.dataset.set]||[]).forEach(spec=>mcq(h,spec));});
+
+/* =============== CCNA exam alignment =============== */
+const T11={'1.7':'Describe private IPv4 addressing','1.8':'Configure and verify IPv6 addressing and prefix','1.9':'Describe IPv6 address types','1.9.a':'Unicast (global, unique local, and link local)','1.9.b':'Anycast','1.9.c':'Multicast','1.9.d':'Modified EUI 64','1.10':'Verify IP parameters for Client OS (Windows, Mac OS, Linux)','3.1':'Interpret the components of routing table','3.3':'Configure and verify IPv4 and IPv6 static routing','4.1':'Configure and verify inside source NAT using static and pools','4.3':'Explain the role of DHCP and DNS within the network'};
+const T20={'1.4':'Troubleshoot IPv6 address configuration, assignment, and prefix sizing (unicast and modified EUI 64)','1.6':'Troubleshoot wired and wireless client connectivity (IP configuration, network reachability, and wireless security parameters on Windows, MacOS, and Linux)','2.4':'Troubleshoot basic Layer 2/Layer 3 connectivity and device operations using show commands, ping, extended ping, trace route, and packet capture output','3.1':'Interpret a routing table to identify the next hop for a packet','3.2':'Troubleshoot IPv4 and IPv6 static routing','3.3':'Configure single area OSPFv2 for IPv4 and OSPFv3 for IPv6','4.3':'Configure NAT/PAT on IOS XE routers','4.4':'Diagnose issues with DNS records (A, AAAA, CNAME, MX, NS, and PTR)','4.7.d':'Configure Layer 2 security features: RA guard'};
+const LVL={core:'🎯 Exam core',idea:'💡 Know the idea',extra:'📚 Course extra'};
+const EXAM={
+ s2:{lvl:'idea',a:['1.7','4.1'],b:['4.3'],f:'Explain how private addresses and NAT stretched IPv4. NAT is its own exam topic, and IPv6 is the long-term fix for running out of addresses.'},
+ s3:{lvl:'extra',a:[],b:[],n:'Dual stack, tunneling, and translation are not named in either blueprint, though Cisco says related topics can appear. Know the one-line idea of each.'},
+ s4:{lvl:'core',a:['1.8'],b:['1.4'],f:'Everything else builds on reading a 128-bit hex address: 8 hextets of 4 hex digits.'},
+ s5:{lvl:'core',a:['1.8'],b:['1.4'],f:'Expand and compress addresses and spot invalid ones (two :: or dropped trailing zeros). Bad compression is a classic cause of wrong addresses in troubleshooting questions.'},
+ s6:{lvl:'core',a:['1.8'],b:['1.4'],f:'More reps of the same skill. Expect to pick the correct short form from several look-alike choices.'},
+ s7:{lvl:'core',a:['1.9.a','1.9.b','1.9.c'],b:['1.4'],f:'v1.1 names unicast, anycast, and multicast. v2.0 names unicast, so make unicast your priority. Know that IPv6 has no broadcast.'},
+ s8:{lvl:'core',a:['1.8'],b:['1.4'],f:'v2.0 names "prefix sizing". Know /64 for LANs (SLAAC needs it), a typical /48 from an ISP, and that IPv6 uses no dotted masks.'},
+ s9:{lvl:'core',a:['1.9.a'],b:['1.4'],f:'Identify the type from the first hextet: 2000::/3 global, fe80::/10 link-local, fc00::/7 unique local, ff00::/8 multicast. Every IPv6 interface has a link-local address.'},
+ s10:{lvl:'core',a:['1.8','1.9.a'],b:['1.4'],f:'Split a GUA into global routing prefix, subnet ID, and interface ID, and work out how many subnets a prefix gives you.'},
+ s11:{lvl:'core',a:['1.8'],b:['1.4','2.4'],f:'Know the exact IOS commands: ipv6 address address/length, ipv6 address fe80::1 link-local, and ipv6 unicast-routing. Verify with show ipv6 interface brief.'},
+ s12:{lvl:'core',a:['1.8','1.9.c'],b:['1.4','4.7.d'],f:'A host with only an fe80 address often never got an RA. A router needs ipv6 unicast-routing to send RAs. In v2.0, RA guard (4.7.d) is the Layer 2 feature that blocks rogue RAs.'},
+ s13:{lvl:'core',a:['1.8','4.3'],b:['1.4'],f:'Compare SLAAC, SLAAC + stateless DHCPv6, and stateful DHCPv6. The default gateway always comes from the RA message.'},
+ s14:{lvl:'core',a:['1.9.d'],b:['1.4'],f:'Convert a MAC address to a modified EUI-64 interface ID by hand: split, insert fffe, flip the 7th bit. Expect to do it from memory.'},
+ s15:{lvl:'core',a:['1.8','1.10','3.1'],b:['1.6','2.4','3.1'],f:'Read client output on Windows, macOS, and Linux, plus show ipv6 interface brief and show ipv6 route (C and L routes). v2.0 wants you to troubleshoot from this output.'},
+ s16:{lvl:'core',a:['1.9.c'],b:[],n20:'v2.0 does not list multicast by name, but RA and RS behavior depends on it.',f:'Know ff00::/8, ff02::1 (all nodes), ff02::2 (all routers), and the idea of a solicited-node address.'},
+ s17:{lvl:'core',a:['1.8'],b:['1.4'],f:'Prefix sizing: a /48 leaves 16 subnet-ID bits, which is 65,536 /64 subnets. Count subnet IDs in hex.'},
+ s18:{lvl:'core',a:['1.8'],b:['1.4'],f:'Plan subnets from a /48 and apply them with ipv6 address on each interface.'},
+ s19:{lvl:'core',a:['1.8','1.9.a'],b:['1.4'],f:'Mixed review of the whole module. If you miss one, use the jump menu to revisit that page.'},
+ s20:{lvl:'core',a:['1.8','1.9.d','1.10'],b:['1.4','1.6','4.4'],f:'Troubleshooting-style practice, which is where v2.0 shifts the exam.'}
+};
+(function(){
+  Object.keys(EXAM).forEach(id=>{
+    const sec=document.getElementById(id),e=EXAM[id];
+    if(!sec)return;
+    const anchor=sec.querySelector('.secnote')||sec.querySelector('.head');
+    const d=document.createElement('div');d.className='exam';d.setAttribute('role','note');
+    const chip=(v,i,T)=>`<span class="chip" title="${esc(T[i]||'')}">${v} ${i}</span>`;
+    let chips='';
+    if(e.a.length)chips+=e.a.map(i=>chip('v1.1',i,T11)).join('');
+    if(e.b.length)chips+=e.b.map(i=>chip('v2.0',i,T20)).join('');
+    if(e.n20)chips+=`<span class="chip">v2.0: not named</span>`;
+    if(!e.a.length&&!e.b.length&&!e.n20)chips+=`<span class="chip">not named in v1.1 or v2.0</span>`;
+    d.innerHTML=`<div><span class="lvl ${e.lvl}">${LVL[e.lvl]}</span>${chips}</div><p><strong>Exam focus:</strong> ${esc(e.f||e.n)}${e.n20?' '+esc(e.n20):''}</p>`;
+    anchor.insertAdjacentElement('afterend',d);
+  });
+})();
+(function(){
+  const pg=id=>steps.findIndex(s=>s.id===id)+1;
+  const V11=[['1.7','s2','Context only'],['1.8','s4 s5 s6 s8 s10 s11 s13 s15 s17 s18','Covered'],['1.9.a','s7 s9 s10','Covered'],['1.9.b','s7','Idea only'],['1.9.c','s12 s16','Covered'],['1.9.d','s14 s20','Covered'],['1.10','s15 s20','IPv6 side'],['3.1','s15','IPv6 routes only'],['3.3','','Next module'],['4.1','s2','Context only'],['4.3','s13','Partly (DHCPv6)']];
+  const V20=[['1.4','s4 s5 s6 s7 s8 s9 s10 s11 s12 s13 s14 s17 s18 s20','Covered'],['1.6','s15 s20','IPv6 side'],['2.4','s11 s15 s20','Partly'],['3.1','s15','IPv6 routes only'],['3.2','','Next module'],['3.3','','Next module (OSPFv3)'],['4.3','s2','Context only'],['4.4','s20','AAAA only'],['4.7.d','s12 s20','Idea only']];
+  function render(v){
+    const rows=v===0?V11:V20,T=v===0?T11:T20,pre=v===0?'v1.1':'v2.0';
+    $('#examMap').innerHTML='<tr><th>Exam topic</th><th>Where in this lesson</th><th>Coverage</th></tr>'+rows.map(r=>{
+      const jumps=r[1]?r[1].split(' ').map(id=>`<button type="button" class="btn jumpbtn" data-jump="${id}">p.${pg(id)}</button>`).join(''):'<span class="note" style="margin:0">Not in this module</span>';
+      return `<tr><td><strong>${pre} ${r[0]}</strong><br>${esc(T[r[0]])}</td><td>${jumps}</td><td class="cov">${esc(r[2])}</td></tr>`;
+    }).join('');
+  }
+  setTabs([$('#emT11'),$('#emT20')],[null,null],render);
+  render(0);
+})();
+(function(){
+  const CK=[['Write any IPv6 address in full and in its shortest form','s5'],['Tell the address type from the first hextet (global, link-local, unique local, multicast)','s9'],['Convert a MAC address to a modified EUI-64 interface ID by hand','s14'],['Explain what /64 means and why LANs use it','s8'],['Split a /48 into /64 subnets and count the subnet ID in hex','s17'],['Configure a router interface with a global address and a static link-local address','s11'],['Explain RS and RA, and compare the three ways to get a global address','s12'],['Read ipconfig, ifconfig, ip -6 addr, and show ipv6 interface brief','s15'],['Name ff02::1 and ff02::2 and say who receives each','s16'],['Troubleshoot: no RA, wrong prefix length, or the wrong subnet','s20']];
+  const ul=$('#ckList');let n=0;
+  CK.forEach((c,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<label style="display:flex;gap:.6rem;align-items:flex-start;flex:1;cursor:pointer"><input type="checkbox" id="ck${i}" style="width:1.3rem;height:1.3rem;flex:none;margin-top:.15rem"><span>${esc(c[0])}</span></label><button type="button" class="btn jumpbtn" data-jump="${c[1]}" style="min-height:2rem;padding:.1rem .6rem;font-size:.85rem">Review</button>`;
+    li.querySelector('input').addEventListener('change',e=>{
+      n+=e.target.checked?1:-1;li.classList.toggle('done',e.target.checked);
+      $('#ckMsg').textContent=n===CK.length?'🎯 All ten! You are ready to practice these in Packet Tracer.':`${n} of ${CK.length} ticked.`;
+    });
+    ul.appendChild(li);
+  });
+})();
+(function(){
+  let cur,n=0;
+  const macStr=b=>{const h=b.map(hx);return h[0]+h[1]+'.'+h[2]+h[3]+'.'+h[4]+h[5];};
+  function newQ(){
+    const b=Array.from({length:6},()=>rnd(256));
+    cur={b,ans:idGroupsOf(eui64(b)).join(''),tries:0,done:false,shown:false};
+    $('#edMac').textContent=macStr(b);$('#edIn').value='';$('#edIn').classList.remove('ok','bad');
+    $('#edFb').textContent='';$('#edSteps').innerHTML='';
+    $('#edCheck').disabled=false;$('#edShow').disabled=false;
+  }
+  function steps2(full){
+    const up=a=>a.map(x=>hx(x).toUpperCase()),mac=up(cur.b),e=eui64(cur.b),eu=up(e);
+    const b0=cur.b[0].toString(2).padStart(8,'0'),b1=(cur.b[0]^2).toString(2).padStart(8,'0');
+    let h=`<li>Split the MAC in half: <code>${mac.slice(0,3).join(':')}</code> | <code>${mac.slice(3).join(':')}</code></li><li>Put <code>FF:FE</code> in the middle: <code>${[...mac.slice(0,3),'FF','FE',...mac.slice(3)].join(':')}</code></li>`;
+    if(full)h+=`<li>Flip the 7th bit of the first byte: <code>${mac[0]}</code> = <code>${b0}</code> becomes <code>${b1}</code> = <code>${eu[0]}</code></li><li>Interface ID: <code>${idGroupsOf(e).join(':')}</code></li>`;
+    else h+=`<li>Now flip the 7th bit of the first byte (the bit worth 2). Write the first byte as 8 binary digits if that helps.</li>`;
+    $('#edSteps').innerHTML=h;
+  }
+  function finish(first){cur.done=true;$('#edCheck').disabled=true;$('#edShow').disabled=true;Score.complete('pr-eui'+(++n),first);}
+  function check(){
+    if(cur.done)return;
+    const v=$('#edIn').value.trim();
+    const fb=$('#edFb');
+    if(!v){fb.textContent='Type your answer first.';fb.className='fb bad';return;}
+    if(!/^[0-9a-f:\s]+$/i.test(v)){fb.textContent='Use only hex digits (0 to 9, a to f) and colons.';fb.className='fb bad';return;}
+    const digits=v.replace(/[^0-9a-f]/gi,'').toLowerCase();
+    cur.tries++;
+    if(digits.length!==16){fb.textContent='An interface ID has 16 hex digits (4 hextets). You typed '+digits.length+'.';fb.className='fb bad';return;}
+    const ok=digits===cur.ans;
+    fb.textContent=ok?'✓ Correct! You split the MAC, inserted fffe, and flipped the 7th bit.':(digits.includes('fffe')?'The fffe is there. Check the flipped 7th bit of the first byte and the hex digits.':'Not yet. Did you insert fffe in the middle (after the first 6 hex digits)?');
+    fb.className='fb '+(ok?'ok':'bad');$('#edIn').classList.toggle('ok',ok);$('#edIn').classList.toggle('bad',!ok);
+    if(ok){steps2(true);finish(cur.tries===1&&!cur.shown);}
+  }
+  $('#edCheck').addEventListener('click',check);
+  $('#edIn').addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+  $('#edHint').addEventListener('click',()=>{if(!cur.done)steps2(false);});
+  $('#edShow').addEventListener('click',()=>{if(cur.done)return;cur.shown=true;steps2(true);const g=idGroupsOf(eui64(cur.b));$('#edIn').value=g.join(':');$('#edFb').textContent='Answer shown. Try another one!';$('#edFb').className='fb ok';finish(false);});
+  $('#edNew').addEventListener('click',newQ);
+  newQ();
+  if(IT)window.__ed=()=>cur;
+})();
 
 /* =============== 1: objectives + word bank =============== */
 (function(){
@@ -1570,6 +1754,21 @@ L   2001:DB8:ACAD:2::1/128 [0/0]
 <span class="cl" data-k="mc">L   FF00::/8 [0/0]
      via Null0, receive</span></pre>`,
     tasks:[['Click a CONNECTED network route (it starts with C).','c1','C means directly connected: the whole /64 network on that interface.'],['Click a LOCAL route for a router interface address (it starts with L and ends in /128).','l1','L is the specific address on the interface, shown as a /128. It is not a link-local address.'],['Click the multicast route.','mc','FF00::/8 is the multicast range.']]}
+   ,{html:`<pre><span class="dim">% ifconfig en0</span>
+en0: flags=8863&lt;UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+	ether 3c:22:fb:12:34:56
+	<span class="cl" data-k="lla">inet6 fe80::1c5a:2f4e:9b11:7ad3%en0 prefixlen 64 secured scopeid 0xe</span>
+	inet 192.168.1.20 netmask 0xffffff00 broadcast 192.168.1.255
+	<span class="cl" data-k="gua">inet6 2001:db8:acad:1:8c4:7a1e:3f2b:91d6 prefixlen 64 autoconf secured</span>
+	<span class="cl" data-k="tmp">inet6 2001:db8:acad:1:b1c2:5d3e:77aa:10f4 prefixlen 64 autoconf temporary</span></pre>`,
+    tasks:[['Click the link-local address.','lla','It starts with fe80 and ends with %en0, which names the interface it belongs to.'],['Click the autoconfigured global address (a stable one, not "temporary").','gua','"autoconf" means SLAAC built it. The stable address is the one that is not marked temporary.'],['Click the TEMPORARY global address.','tmp','Temporary addresses are random privacy addresses. A device can have several global addresses at once.']]},
+   {html:`<pre><span class="dim">$ ip -6 addr show eth0</span>
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 state UP qlen 1000
+    <span class="cl" data-k="gua">inet6 2001:db8:acad:1:50a5:8a35:a5bb:66e1/64 scope global dynamic mngtmpaddr noprefixroute</span>
+       valid_lft 86396sec preferred_lft 14396sec
+    <span class="cl" data-k="lla">inet6 fe80::50a5:8a35:a5bb:66e1/64 scope link noprefixroute</span>
+       valid_lft forever preferred_lft forever</pre>`,
+    tasks:[['Click the global unicast address (look for "scope global").','gua','"scope global" marks the GUA, and the /64 after it is the prefix length. "dynamic" means it was learned automatically.'],['Click the link-local address (look for "scope link").','lla','"scope link" means it only works on this link.']]}
   ];
   let oi=0,ti=0,wrong=0;
   const box=$('#outBox');
@@ -1611,14 +1810,30 @@ L   2001:DB8:ACAD:2::1/128 [0/0]
     $('#mcBtns').appendChild(b);
   });
   function sn(){
-    const g=expand($('#snIn').value.trim());
-    if(!g){$('#snOut').textContent='That is not a valid IPv6 address.';$('#snOut').className='fb bad';return;}
+    const g=expand($('#snIn').value.trim()),steps=$('#snSteps'),o=$('#snOut');
+    if(!g){steps.innerHTML='';o.textContent='That is not a valid IPv6 address. Try something like 2001:db8:acad:1:fe99:47ff:fe75:cee0';o.className='fb bad';return;}
+    const d6=g[6].slice(2),d7=g[7],six=d6+d7;
+    const full=g.slice(0,6).join(':')+':'+g[6].slice(0,2)+'<mark class="hl">'+d6+':'+d7+'</mark>';
     const s=solicited(g);
-    $('#snOut').textContent=`${s}   (Ethernet multicast MAC: 33:33:ff:${g[6].slice(2)}:${g[7].slice(0,2)}:${g[7].slice(2)})`;
-    $('#snOut').className='fb ok';
+    const mac='33:33:ff:'+d6+':'+d7.slice(0,2)+':'+d7.slice(2);
+    steps.innerHTML=
+      `<li><strong>Write the unicast address in full.</strong> The last 6 hex digits (24 bits) are highlighted: <code>${full}</code></li>`+
+      `<li><strong>Copy just those six digits:</strong> <mark class="hl">${six}</mark> (everything else in the address is ignored)</li>`+
+      `<li><strong>Glue them onto the fixed front part</strong> <code>ff02::1:ff</code>. The front never changes, so every solicited-node address starts the same way. Result: <code>ff02::1:ff</code> + <mark class="hl">${d6}:${d7}</mark> = <code>${esc(s)}</code></li>`+
+      `<li><strong>The network card gets a matching Ethernet address</strong> (33:33 plus the last 32 bits): <code>${mac}</code>. The card only passes up frames sent to that address, so devices with other digits never get interrupted.</li>`;
+    o.textContent=`${s}   (Ethernet multicast MAC: ${mac})`;o.className='fb ok';
   }
   $('#snGo').addEventListener('click',sn);$('#snIn').addEventListener('keydown',e=>{if(e.key==='Enter')sn();});
-  sn();
+  $('#snEx1').addEventListener('click',()=>{$('#snIn').value='2001:db8:acad:1:fe99:47ff:fe75:cee0';sn();});
+  $('#snEx2').addEventListener('click',()=>{$('#snIn').value='fe80::1:1';sn();});
+  const SN_DEFAULT='2001:db8:acad:1:fe99:47ff:fe75:cee0';
+  function resetSn(focus){
+    $('#snIn').value=SN_DEFAULT;$('#snSteps').innerHTML='';
+    const o=$('#snOut');o.textContent='Ready. Press Build it to see the address built step by step.';o.className='fb';
+    if(focus)$('#snIn').focus();
+  }
+  $('#snReset').addEventListener('click',()=>resetSn(true));
+  resetSn(false);
 })();
 
 /* =============== 17: subnet counting =============== */
