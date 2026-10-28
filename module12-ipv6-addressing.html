@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Module 12: IPv6 Addressing (Easy Mode)</title>
+<style>
+
+:root{
+  color-scheme:light;
+  --bg:#f2eeff;--card:#ffffff;--ink:#1a1446;--muted:#4f4a7a;--line:#d6cfff;
+  --violet:#6c4df6;--on-violet:#ffffff;
+  --pink:#ff4f8b;--yellow:#ffd23f;--mint:#22c7a9;--orange:#ff8a3d;--sky:#3da5ff;--on-bright:#1a1446;
+  --good:#0b6e56;--good-bg:#d9f7ef;--bad:#a8123f;--bad-bg:#ffe0ec;--focus:#b85600;
+  --hero:#1a1446;--code-bg:#1a1446;--code-ink:#ffffff;--code-dim:#a9a3d9;--code-green:#22c7a9;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Courier New",monospace;
+  --title:"Arial Black","Segoe UI Black","Helvetica Neue",Arial,sans-serif;
+  --meme:Impact,Haettenschweiler,"Arial Narrow Bold","Arial Black",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#120e33;--card:#1d1850;--ink:#f1eeff;--muted:#bab4ea;--line:#3a3288;
+    --violet:#8f7bff;--on-violet:#120e33;
+    --good:#5fe0c0;--good-bg:#12372f;--bad:#ff8fb5;--bad-bg:#431228;--focus:#ffb454;
+    --hero:#2b2170;--code-bg:#0c0925;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+h1:focus,h2:focus{outline:none}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:1.0625rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+code,.mono{font-family:var(--mono)}
+
+/* top bar and pager */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:.6rem 1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+.brand{font:900 1rem var(--title)}
+.progress{flex:1 1 8rem;height:.8rem;background:var(--line);border-radius:99px;overflow:hidden;min-width:6rem}
+.progress .bar{height:100%;width:5%;background:var(--violet);transition:width .25s}
+.jump select{padding:.35rem .5rem;border:2px solid var(--line);border-radius:10px;background:var(--card);max-width:15rem}
+.mini{font-weight:700;color:var(--muted);white-space:nowrap}
+.pager{position:sticky;bottom:0;z-index:5;background:var(--bg);border-top:2px solid var(--line);padding:.6rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.8rem}
+.pager .count{color:var(--muted);font-weight:600}
+main{flex:1;width:100%;max-width:58rem;margin:0 auto;padding:1.2rem 1rem 1.5rem}
+
+/* shared pieces */
+.btn{min-height:2.75rem;padding:.5rem 1.1rem;border-radius:12px;border:2px solid var(--line);background:var(--card);cursor:pointer;font-weight:600}
+.btn:hover:not(:disabled){border-color:var(--violet)}
+.btn.primary{background:var(--violet);border-color:var(--violet);color:var(--on-violet)}
+.btn.ghost{background:transparent}
+.btn.big{font-size:1.15rem;padding:.7rem 1.5rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
+h2{font:900 clamp(1.5rem,4.5vw,2.1rem)/1.15 var(--title);margin:0;flex:1 1 16rem}
+h3{font-size:1.2rem;margin:.1rem 0 .5rem}
+.sticker{background:var(--yellow);color:var(--on-bright);font-weight:800;font-size:.95rem;line-height:1.3;padding:.55rem .9rem;border-radius:12px;transform:rotate(-3deg);box-shadow:0 3px 8px rgba(0,0,0,.2);max-width:13rem;text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}
+@media (max-width:42rem){.two,.three{grid-template-columns:1fr}}
+.stat{border-radius:16px;padding:1.2rem;color:var(--on-bright)}
+.stat.pink{background:var(--pink)}.stat.mint{background:var(--mint)}.stat.yellow{background:var(--yellow)}
+.stat.violet{background:var(--violet);color:var(--on-violet)}
+.stat .big{font:900 clamp(1.7rem,6vw,2.6rem)/1.1 var(--title);margin-bottom:.4rem}
+.stat p{margin:0;font-weight:700}
+.note{color:var(--muted);font-style:italic;margin:.4rem 0 0}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.fb{margin-top:.6rem;font-weight:700;min-height:1.4rem}
+.fb.ok{color:var(--good)}.fb.bad{color:var(--bad)}
+input[type=text]{padding:.55rem .75rem;border:2px solid var(--line);border-radius:10px;background:var(--card);min-width:0}
+input[type=text].ok{border-color:var(--good);background:var(--good-bg)}
+input[type=text].bad{border-color:var(--bad);background:var(--bad-bg)}
+input[type=range]{width:100%;accent-color:var(--violet)}
+.meme{font:400 clamp(1.5rem,5vw,2.4rem)/1.1 var(--meme);text-transform:uppercase;color:#fff;text-align:center;text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000,0 3px 0 #000;margin:0}
+.memebox{background:var(--violet);border-radius:16px;padding:1.4rem 1rem;display:grid;gap:1.4rem;margin-bottom:1rem}
+.tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+.tab[aria-pressed=true]{background:var(--violet);border-color:var(--violet);color:var(--on-violet)}
+.kbd{display:inline-block;padding:.05rem .5rem;border-radius:8px;border:2px solid var(--line);font-family:var(--mono);font-weight:700;background:var(--card)}
+
+/* hero */
+.hero{background:var(--hero);color:#fff;border-radius:20px;padding:2rem 1.5rem}
+.hero-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:1.5rem;align-items:center}
+@media (max-width:42rem){.hero-grid{grid-template-columns:1fr}}
+.hero h1{font:900 clamp(1.9rem,6vw,3rem)/1.1 var(--title);margin:0 0 .8rem}
+.hero .sub{font-size:1.25rem;font-style:italic;color:var(--yellow);margin:0 0 1.4rem}
+.hero .btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--on-bright)}
+.constellation{position:relative;width:min(17rem,70vw);aspect-ratio:1;margin:0 auto}
+.constellation .core,.constellation .sat{position:absolute;display:grid;place-items:center;border-radius:50%}
+.constellation .core{inset:27%;background:var(--violet);font-size:3.2rem}
+.constellation .sat{width:3.4rem;height:3.4rem;left:calc(50% - 1.7rem);top:calc(50% - 1.7rem);font-size:1.7rem;color:#000;transform:rotate(var(--a)) translateY(-6.1rem) rotate(calc(-1*var(--a)))}
+@media (max-width:42rem){.constellation .sat{transform:rotate(var(--a)) translateY(-5.2rem) rotate(calc(-1*var(--a)))}}
+
+/* mission cards */
+.mcard{display:flex;gap:1rem;align-items:flex-start}
+.mcard .ic{flex:none;width:3.2rem;height:3.2rem;border-radius:50%;display:grid;place-items:center;font-size:1.6rem;color:#000}
+.mcard h3{margin:0 0 .2rem}.mcard p{margin:0}
+
+/* bars (devices) */
+.bars{display:grid;gap:.5rem;margin:.8rem 0}
+.bl{font-weight:700;font-size:.95rem}
+.bt{height:1.6rem;background:var(--line);border-radius:8px;overflow:hidden}
+.bt i{display:block;height:100%;border-radius:8px;transition:width .2s}
+
+/* glow-up rows */
+.gu{width:100%;text-align:left;display:grid;grid-template-columns:1fr 1fr;gap:.6rem;background:none;border:0;padding:0;cursor:pointer;margin-bottom:.4rem}
+.gu span{padding:.9rem 1rem;border-radius:12px;font-weight:800;color:var(--on-bright)}
+.gu .l{background:var(--pink)}.gu .r{background:var(--mint)}
+.gu:focus-visible{outline-offset:3px}
+.why{margin:0 0 .8rem;padding:.7rem 1rem;background:var(--card);border:2px dashed var(--line);border-radius:12px}
+.colhead{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem}
+.colhead div{font:400 2rem/1 var(--meme);text-transform:uppercase;color:var(--on-bright);padding:.6rem 1rem;border-radius:12px}
+.colhead .l{background:var(--pink)}.colhead .r{background:var(--mint)}
+
+/* version tiles */
+.vt{padding:.9rem 1.1rem;border-radius:14px;margin-bottom:.7rem}
+.vt strong{font-family:var(--title)}
+.vt.a{background:var(--violet);color:var(--on-violet)}
+.vt.b{border:3px dashed var(--yellow);background:var(--hero);color:#fff}
+.vt.c{background:var(--mint);color:var(--on-bright)}
+
+/* bit grid */
+.bitgrid{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin:.8rem 0}
+.bitgrid i{aspect-ratio:1;background:var(--line);border-radius:2px}
+.bitgrid i.on{background:var(--violet)}
+.bitgrid i.v4{background:var(--pink)}
+.bigout{font:900 clamp(1.3rem,4.5vw,2rem)/1.2 var(--title);word-break:break-all}
+.exact{font-family:var(--mono);font-size:.9rem;color:var(--muted);word-break:break-all}
+
+/* anatomy */
+.groups{display:flex;flex-wrap:wrap;gap:.5rem .1rem;align-items:center;justify-content:center;margin:.6rem 0}
+.groups .gw{display:inline-flex;align-items:center;white-space:nowrap}
+.groups .co{font:800 1.3rem var(--mono);padding:0 .15rem}
+.gbtn{font:800 clamp(.95rem,2.9vw,1.4rem) var(--mono);padding:.7rem .45rem;border-radius:12px;border:3px solid transparent;cursor:pointer;background:var(--violet);color:var(--on-violet)}
+.gbtn.zero{background:var(--yellow);color:var(--on-bright)}
+.gbtn[aria-pressed=true]{border-color:var(--ink)}
+.binout{text-align:center;font:800 1.2rem var(--mono);min-height:3.2rem;padding:.6rem;background:var(--card);border:2px solid var(--line);border-radius:12px}
+
+/* code lines */
+.codebox{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1rem 1.2rem;font-family:var(--mono);font-size:clamp(.95rem,3.2vw,1.3rem);overflow-x:auto}
+.codebox .ln{display:flex;gap:1rem;margin:.35rem 0;white-space:nowrap;align-items:baseline}
+.codebox .lab{font:600 .95rem system-ui,sans-serif;color:var(--code-dim);min-width:5.5rem}
+.codebox mark{background:none;color:var(--code-green);font-weight:700}
+.codebox mark.pk{color:var(--pink)}
+.codebox .dim{color:var(--code-dim)}
+@media (max-width:34rem){.codebox{font-size:.78rem}.codebox .ln{flex-direction:column;gap:0;margin:.5rem 0}}
+.only{display:inline-block;background:var(--pink);color:var(--on-bright);font-weight:800;padding:.1rem .6rem;border-radius:99px;font-size:.85rem}
+
+/* practice */
+.prob{display:flex;gap:.9rem;align-items:flex-start;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:.9rem;margin-bottom:.8rem}
+.plabel{flex:none;width:2.6rem;height:2.6rem;border-radius:50%;display:grid;place-items:center;font:900 1.2rem var(--title);background:var(--yellow);color:var(--on-bright)}
+.pbody{flex:1;min-width:0}
+.full{display:block;font:800 clamp(.8rem,3vw,1.2rem) var(--mono);margin-bottom:.5rem;word-break:break-all}
+.pbody input[type=text]{flex:1 1 12rem;font-family:var(--mono)}
+
+/* prefix */
+.seg{display:flex;border-radius:14px;overflow:hidden;border:3px solid var(--ink);margin:.4rem 0 1rem}
+.seg button{border:0;cursor:pointer;font:800 clamp(.9rem,3vw,1.3rem) system-ui,sans-serif;padding:1rem .3rem;color:var(--on-bright);border-right:3px solid var(--bg)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{outline:4px solid var(--ink);outline-offset:-4px}
+.seg .s1{flex:48;background:var(--violet);color:var(--on-violet)}
+.seg .s2{flex:16;background:var(--yellow)}
+.seg .s3{flex:64;background:var(--pink)}
+.braces{display:flex;font-weight:800;text-align:center;margin-top:.2rem}
+.braces div{border-top:3px solid var(--ink);padding-top:.2rem}
+
+/* types flip cards */
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
+@media (max-width:48rem){.tgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:30rem){.tgrid{grid-template-columns:1fr}}
+.tcard{min-height:10rem;border-radius:16px;border:0;cursor:pointer;text-align:left;padding:1rem;color:var(--on-bright);display:flex;flex-direction:column;gap:.3rem}
+.tcard .em{font-size:2rem}
+.tcard .vibe{font-weight:800;font-size:1.1rem}
+.tcard .nm{font-size:.95rem}
+.tcard .back{display:none}
+.tcard.flipped .front{display:none}.tcard.flipped .back{display:block}
+.tcard .pre{font:800 1.15rem var(--mono)}
+.tcard .hint{margin-top:auto;font-size:.85rem;font-weight:700;opacity:.85}
+
+/* quiz choice buttons */
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.6rem;margin:.8rem 0}
+.choices .btn.bad{background:var(--bad-bg);border-color:var(--bad);text-decoration:line-through}
+.choices .btn.ok{background:var(--good-bg);border-color:var(--good)}
+.bigaddr{font:800 clamp(1.4rem,6vw,2.4rem) var(--mono);word-break:break-all;margin:.4rem 0}
+
+/* chat */
+.chat{background:var(--hero);border-radius:16px;padding:1rem;display:grid;gap:.7rem;min-height:15rem;align-content:start}
+.bub{max-width:80%;padding:.8rem 1rem;border-radius:18px;font-weight:600;color:var(--on-bright)}
+.bub.v4{background:#f2eeff;justify-self:start}
+.bub.v6{background:var(--pink);justify-self:end}
+.pill{justify-self:center;background:rgba(255,255,255,.16);color:#f1eeff;font-style:italic;padding:.35rem 1rem;border-radius:99px;font-size:.95rem}
+.chat>*{animation:pop .25s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* details / accordion */
+details.acc{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:.2rem 1rem;margin-bottom:.6rem}
+details.acc summary{cursor:pointer;font-weight:800;min-height:2.75rem;display:flex;align-items:center;gap:.6rem}
+details.acc p{margin:.2rem 0 .8rem}
+.euiSteps{padding-left:1.3rem;margin:.8rem 0}
+.euiSteps li{margin:.5rem 0}
+.euiSteps code{font-weight:800;background:var(--bg);padding:.1rem .4rem;border-radius:6px;word-break:break-all}
+
+/* firewall */
+.fwrow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.4rem;align-items:center;text-align:center;margin:1rem 0}
+.fwrow .node{padding:.8rem .4rem;border-radius:12px;background:var(--card);border:2px solid var(--line);font-weight:800}
+.fwrow .fwn{background:var(--mint);color:var(--on-bright);border-color:var(--mint)}
+.fwrow .fwn.off{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.switch{display:inline-flex;align-items:center;gap:.6rem;min-height:2.75rem;font-weight:800}
+.switch input{width:1.6rem;height:1.6rem;accent-color:var(--mint)}
+
+/* commands */
+.cmd{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;align-items:center;margin:.4rem 0;padding:.6rem .8rem;background:var(--card);border:2px solid var(--line);border-radius:12px}
+.cmd code{font-weight:800;overflow-wrap:anywhere}
+.cmd .pr{color:var(--muted);font-family:var(--mono);font-size:.9rem}
+.cmd .ex{grid-column:1 / -1;color:var(--muted);font-size:.95rem}
+.copied{font-weight:700;color:var(--good);min-height:1.4rem}
+
+/* score */
+.score{font-weight:800}
+#reportCard input{width:100%}
+.rpf{display:grid;gap:.6rem;grid-template-columns:1fr 1fr;margin:.6rem 0}
+@media (max-width:34rem){.rpf{grid-template-columns:1fr}}
+.rpf label{display:block;font-weight:700;margin-bottom:.2rem}
+.tl{display:grid;gap:.6rem;margin-bottom:1rem}
+.tl div{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:.8rem 1rem;font-weight:700}
+
+
+/* ===== Module 12 additions ===== */
+.kicker{font-weight:800;color:var(--yellow);margin:0 0 .4rem}
+.plain{background:var(--card);background:color-mix(in srgb,var(--mint) 20%,var(--card));border:2px solid var(--mint);border-radius:16px;padding:1rem 1.1rem;margin-bottom:1rem}
+.plain p{margin:.4rem 0 0}
+.lbl{display:inline-block;background:var(--mint);color:var(--on-bright);padding:.05rem .65rem;border-radius:99px;font-weight:800;font-size:.9rem}
+.secnote{color:var(--muted);font-size:.9rem;margin:-.5rem 0 1rem}
+.obj{list-style:none;padding:0;margin:0;display:grid;gap:.5rem}
+.obj button{width:100%;text-align:left;display:flex;gap:.7rem;align-items:center}
+.obj .n{flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--yellow);color:var(--on-bright);display:grid;place-items:center;font-weight:900}
+.termgrid{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0}
+.termgrid button{border-radius:99px;min-height:2.4rem;padding:.3rem .9rem}
+.termgrid button[aria-pressed=true]{background:var(--violet);color:var(--on-violet);border-color:var(--violet)}
+.thing{display:flex;flex-direction:column;align-items:center;gap:.1rem;padding:.6rem .3rem;border-radius:14px;min-height:5rem}
+.thing .em{font-size:1.8rem}
+.thing[aria-pressed=true]{background:var(--mint);color:var(--on-bright);border-color:var(--mint)}
+.thingGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.5rem;margin:.6rem 0}
+.hexgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:.4rem;margin:.6rem 0}
+.hexgrid button{font:800 1.2rem var(--mono);padding:.4rem 0}
+.hexgrid button[aria-pressed=true]{background:var(--violet);color:var(--on-violet);border-color:var(--violet)}
+.hextets{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:.6rem 0}
+.hx{font:800 clamp(.95rem,2.8vw,1.35rem) var(--mono);padding:.55rem .5rem;border-radius:12px;border:3px solid var(--line);background:var(--card);min-width:3.6rem;text-align:center}
+.hx.net{background:var(--violet);color:var(--on-violet);border-color:var(--violet)}
+.hx.host{background:var(--pink);color:var(--on-bright);border-color:var(--pink)}
+.hx.sub{background:var(--yellow);color:var(--on-bright);border-color:var(--yellow)}
+.hx.mix{background:linear-gradient(90deg,var(--violet) 50%,var(--pink) 50%);color:#fff;border-color:var(--ink);text-shadow:0 1px 2px #000}
+button.hx{cursor:pointer}
+.bitrow{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin:.5rem 0}
+.bitrow i{aspect-ratio:1;background:var(--pink);border-radius:2px}
+.bitrow i.n{background:var(--violet)}
+.tbl{width:100%;border-collapse:separate;border-spacing:.4rem;margin:.4rem 0}
+.tbl th{text-align:left;font-size:.95rem}
+.tbl td{vertical-align:middle}
+.tbl select{width:100%;padding:.5rem;border:2px solid var(--line);border-radius:10px;background:var(--card);font-size:.95rem}
+.tbl select.ok{border-color:var(--good);background:var(--good-bg)}
+.tbl select.bad{border-color:var(--bad);background:var(--bad-bg)}
+.tbl .rowhead{font-weight:800}
+.scroll{overflow-x:auto}
+.tasklist{list-style:none;padding:0;margin:.5rem 0;display:grid;gap:.35rem}
+.tasklist li{padding:.45rem .7rem;border-radius:10px;border:2px solid var(--line);background:var(--card);display:flex;gap:.6rem;align-items:flex-start}
+.tasklist li.done{border-color:var(--good);background:var(--good-bg)}
+.tasklist li .bx{flex:none;font-weight:900}
+.term{background:#0b0824;color:#e9e6ff;border-radius:14px;padding:.8rem;font-family:var(--mono);font-size:.95rem;border:2px solid var(--line)}
+.term pre{margin:0;white-space:pre-wrap;word-break:break-word;max-height:18rem;overflow:auto;font:inherit}
+.tline{display:flex;gap:.5rem;align-items:center;margin-top:.4rem}
+.tline .pr{white-space:nowrap;color:#9ee7d6}
+.tline input{flex:1;min-width:0;background:transparent;border:0;border-bottom:2px solid #4a4390;color:#fff;font:inherit;padding:.3rem 0}
+.tline input:focus{outline:none;border-bottom-color:var(--yellow)}
+.tline input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.term .err{color:#ff9db9}
+.out{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:.9rem 1rem;font:clamp(.8rem,2.6vw,1rem)/1.5 var(--mono);overflow-x:auto;margin:.6rem 0}
+.out pre{margin:0;font:inherit;white-space:pre}
+.cl{cursor:pointer;border-radius:6px;padding:0 .15rem;border-bottom:2px dotted var(--code-dim)}
+.cl:hover{background:rgba(255,255,255,.15)}
+.cl.hit{background:var(--good);color:#04251d;border-bottom-color:transparent}
+.cl.miss{background:var(--bad);color:#fff}
+.qline{font-weight:800;margin:.5rem 0}
+.net5{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.6rem;margin:.8rem 0}
+.dev{padding:.8rem .4rem;border-radius:14px;border:3px solid var(--line);background:var(--card);text-align:center;font-weight:800;transition:background .2s,border-color .2s}
+.dev .em{font-size:1.6rem;display:block}
+.dev.rcv{background:var(--good-bg);border-color:var(--good)}
+.dev small{display:block;font-weight:600;color:var(--muted)}
+.pad{padding-bottom:.4rem}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.7rem}
+.plan .link{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:.8rem}
+.plan .link label{font-weight:800;display:block;margin-bottom:.3rem}
+.plan .link code{display:block;margin-top:.3rem;font-weight:800;word-break:break-all}
+.cfg{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:.9rem 1rem;font:clamp(.8rem,2.6vw,.95rem)/1.5 var(--mono);overflow-x:auto;white-space:pre}
+.counter{font:900 clamp(1.1rem,4.4vw,2rem) var(--mono);text-align:center;padding:1rem .5rem;background:var(--card);border:2px solid var(--line);border-radius:14px;word-break:break-all}
+.counter b{color:var(--pink)}
+.mcs .mc{margin-bottom:.8rem}
+.mq,.fb,.why,.plain p,.qline{overflow-wrap:anywhere}
+.prob .btn{flex:none}
+.euiSteps code{word-break:normal;overflow-wrap:anywhere}
+.top .jump{flex:1 1 8rem;min-width:0}
+.top .jump select{width:100%;max-width:none}
+.mq{font-weight:800;margin:0 0 .3rem}
+.choices .btn{min-width:0;overflow-wrap:anywhere}
+.choices .btn.mono{font-family:var(--mono);font-size:.9rem}
+@media (max-width:34rem){.choices{grid-template-columns:1fr}}
+.tools button.on{background:var(--violet);color:var(--on-violet);border-color:var(--violet)}
+.two>*{min-width:0}
+.big-pad{margin-top:1rem}
+.nextsteps li{margin:.4rem 0}
+</style>
+</head>
+<body>
+<noscript><p style="padding:1rem">This lesson needs JavaScript. Open it in a modern browser.</p></noscript>
+
+<header class="top">
+  <span class="brand">Module 12 · IPv6</span>
+  <div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="20" aria-valuenow="1"><div class="bar" id="bar"></div></div>
+  <span class="mini" id="mini" title="Interactive activities completed">0 done</span>
+  <span class="tools row" style="gap:.4rem">
+    <button class="btn" type="button" id="bigText" aria-pressed="false" title="Make the text bigger">A+</button>
+    <button class="btn" type="button" id="speak" title="Read this section out loud">🔊</button>
+  </span>
+  <label class="jump"><span class="sr">Jump to a section</span><select id="jump"></select></label>
+</header>
+
+<main id="stage">
+
+<!-- 1 WELCOME -->
+<section class="step" id="s1" data-title="Welcome">
+  <div class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="kicker">Module 12 · IPv6 Addressing</p>
+        <h1>IPv6 Addressing, Made Easy</h1>
+        <p class="sub speak">Eight big questions. Plain-English answers. Lots of things to click.</p>
+        <button class="btn primary big" type="button" data-go="next">Let's go</button>
+      </div>
+      <div class="constellation" aria-hidden="true">
+        <div class="core">🌎</div>
+        <div class="sat" style="--a:0deg;background:var(--yellow)">💻</div>
+        <div class="sat" style="--a:60deg;background:var(--mint)">📱</div>
+        <div class="sat" style="--a:120deg;background:var(--orange)">📺</div>
+        <div class="sat" style="--a:180deg;background:var(--sky)">🎮</div>
+        <div class="sat" style="--a:240deg;background:var(--yellow)">📷</div>
+        <div class="sat" style="--a:300deg;background:var(--mint)">💡</div>
+      </div>
+    </div>
+  </div>
+  <div class="card big-pad">
+    <h3>By the end, you can answer these. Tap one to jump to it.</h3>
+    <ol class="obj" id="objList"></ol>
+  </div>
+  <details class="acc">
+    <summary>📚 Word bank (tap a term to see what it means)</summary>
+    <div class="termgrid" id="termGrid"></div>
+    <div class="why" id="termDef" aria-live="polite">Tap a term above.</div>
+  </details>
+</section>
+
+<!-- 2 WHY -->
+<section class="step" id="s2" data-title="Why do we need IPv6?">
+  <div class="head"><h2>Why do we need IPv6?</h2><div class="sticker">The address jar<br>is empty</div></div>
+  <p class="secnote">Book section 12.1.1</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Every device on the internet needs an address, like a phone number. IPv4 only has about <strong>4.3 billion</strong>, and we ran out of fresh ones. IPv6 has <strong>340 undecillion</strong> (a 340 followed by 36 zeros). It also fixes some IPv4 headaches along the way.</p></div>
+  <div class="three">
+    <div class="card"><h3>🩹 NAT was duct tape</h3><p style="margin:0">Private addresses plus NAT slowed the shortage. But NAT confuses some apps, adds delay, and makes direct device-to-device (peer-to-peer) connections harder.</p></div>
+    <div class="card"><h3>📱 Phones led the way</h3><p style="margin:0">With so many mobile devices, mobile providers were some of the first to move to IPv6.</p></div>
+    <div class="card"><h3>🌡️ The Internet of Things</h3><p style="margin:0">Cars, appliances, medical gear, and sensors all want to be online too.</p></div>
+  </div>
+  <div class="card">
+    <h3>Tap everything in your home or pocket that connects to the internet</h3>
+    <div class="thingGrid" id="thingGrid"></div>
+    <p id="thingMsg" class="fb" aria-live="polite" style="font-size:1.05rem"></p>
+  </div>
+  <div class="mcs" data-set="why"></div>
+</section>
+
+<!-- 3 COEXIST -->
+<section class="step" id="s3" data-title="IPv4 and IPv6 living together">
+  <div class="head"><h2>IPv4 and IPv6 living together</h2><div class="sticker">Awkward roommates,<br>but it works</div></div>
+  <p class="secnote">Book section 12.1.2</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>There's no "switch day" where the internet flips to IPv6. Both will exist for years, so we use three bridges to get from one world to the other.</p></div>
+  <div class="three">
+    <div class="stat mint"><div class="big" style="font-size:1.5rem">🗣️ Dual stack</div><p>The device speaks both languages: IPv4 and IPv6 at the same time.</p></div>
+    <div class="stat yellow"><div class="big" style="font-size:1.5rem">✉️ Tunneling</div><p>An IPv6 packet rides inside an IPv4 packet, like an envelope inside an envelope.</p></div>
+    <div class="stat pink"><div class="big" style="font-size:1.5rem">🧑‍🏫 Translation (NAT64)</div><p>A translator swaps IPv6 packets for IPv4 packets and back.</p></div>
+  </div>
+  <p class="note">Tunneling and translation are temporary bridges. The goal is native IPv6 from start to finish.</p>
+  <h3 style="margin-top:1rem">Which bridge fits?</h3>
+  <div class="mcs" data-set="coexist"></div>
+</section>
+
+<!-- 4 MEET THE ADDRESS -->
+<section class="step" id="s4" data-title="Meet an IPv6 address">
+  <div class="head"><h2>Meet an IPv6 address</h2><div class="sticker">8 chunks. 32 digits.<br>128 bits.</div></div>
+  <p class="secnote">Book section 12.2.1</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>An IPv6 address is <strong>128 bits</strong> written in <strong>hexadecimal</strong>. Each hex digit stands for 4 bits, so that is <strong>32 hex digits</strong>. We split them into <strong>8 chunks of 4 digits</strong>, separated by colons. The course calls one chunk a <strong>hextet</strong> (16 bits). Writing all 32 digits is called the <strong>preferred format</strong>.</p></div>
+  <div class="card">
+    <h3>Tap a hextet to see its 16 bits</h3>
+    <div class="groups" id="groups"></div>
+    <div class="binout" id="binOut" aria-live="polite">Tap a chunk above.</div>
+    <div class="row" style="margin-top:.6rem;justify-content:center"><button class="btn" type="button" id="caseBtn">Switch to UPPERCASE</button><span class="note" style="margin:0">Case doesn't matter in IPv6.</span></div>
+  </div>
+  <div class="card">
+    <h3>Hex digit decoder</h3>
+    <p style="margin-top:0">Hex counts 0 to 9, then a to f. Tap a digit.</p>
+    <div class="hexgrid" id="hexGrid"></div>
+    <div class="binout" id="hexOut" aria-live="polite">Tap a digit.</div>
+  </div>
+  <div class="mcs" data-set="meet"></div>
+</section>
+
+<!-- 5 RULES -->
+<section class="step" id="s5" data-title="Shrinking an address: two rules">
+  <div class="head"><h2>Shrinking an address: two rules</h2><div class="sticker">Same address.<br>Fewer digits.</div></div>
+  <p class="secnote">Book sections 12.2.2 and 12.2.3</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Full addresses are long, so we shorten them. Rule 1 is about zeros at the <em>front</em> of a chunk. Rule 2 squashes a run of all-zero chunks into <strong>::</strong>. You may only use <strong>::</strong> once, or nobody could tell how many chunks it hides.</p></div>
+  <div class="two">
+    <div class="card"><h3>Rule 1: Drop leading zeros</h3><p style="margin:0"><code>01ab</code> → <code>1ab</code>, <code>00ab</code> → <code>ab</code>, <code>0000</code> → <code>0</code>. Never drop zeros at the <em>end</em>: <code>ab00</code> is not <code>ab</code>.</p></div>
+    <div class="card"><h3>Rule 2: One <code>::</code> only</h3><p style="margin:0">Replace one run of all-zero hextets with <code>::</code>. If there are two runs, squash the <strong>longest</strong>. If they tie, squash the <strong>first</strong>.</p></div>
+  </div>
+  <div class="row" style="margin-bottom:.8rem"><label for="exSel"><strong>Try an example:</strong></label><select id="exSel" style="padding:.45rem .6rem;border:2px solid var(--line);border-radius:10px;background:var(--card);max-width:100%"></select></div>
+  <div class="codebox" id="shrinkBox" aria-live="polite"></div>
+  <div class="row" style="margin-top:.8rem"><button class="btn primary" type="button" id="r1">Apply Rule 1</button><button class="btn primary" type="button" id="r2" disabled>Apply Rule 2</button><button class="btn ghost" type="button" id="rReset">Reset</button></div>
+  <p class="fb ok" id="shrinkNote" aria-live="polite"></p>
+  <h3 style="margin-top:1.2rem">Spot the mistake</h3>
+  <p style="margin-top:0">Each card shows a full address and someone's shortened version. Judge it.</p>
+  <div id="vbGame"></div>
+</section>
+
+<!-- 6 PRACTICE -->
+<section class="step" id="s6" data-title="Practice: shrink and expand">
+  <div class="head"><h2>Practice: shrink and expand</h2><div class="sticker">Reps make<br>it stick</div></div>
+  <p class="secnote">Book section 12.2 (practice)</p>
+  <div class="tabs" role="group" aria-label="Practice type"><button class="btn tab" type="button" id="pTabS" aria-pressed="true">Shrink it</button><button class="btn tab" type="button" id="pTabE" aria-pressed="false">Expand it</button></div>
+  <p id="pHelp" style="margin-top:0"></p>
+  <div id="pBox"></div>
+  <div class="row"><button class="btn primary" type="button" id="pMore">Give me another one</button></div>
+</section>
+
+<!-- 7 THREE KINDS -->
+<section class="step" id="s7" data-title="Three kinds of addresses">
+  <div class="head"><h2>Three kinds of addresses</h2><div class="sticker">One, many,<br>or nearest</div></div>
+  <p class="secnote">Book section 12.3.1</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Think about how you send messages. <strong>Unicast</strong> is a text to one friend. <strong>Multicast</strong> is a group chat. <strong>Anycast</strong> is calling a store chain and getting the nearest branch. IPv6 has <strong>no broadcast</strong>. The "all-nodes" multicast group does that job instead.</p></div>
+  <div class="three">
+    <div class="stat mint"><div class="big" style="font-size:1.4rem">Unicast</div><p>One sender, one receiver. Identifies one interface.</p></div>
+    <div class="stat yellow"><div class="big" style="font-size:1.4rem">Multicast</div><p>One packet to a whole group of devices.</p></div>
+    <div class="stat pink"><div class="big" style="font-size:1.4rem">Anycast</div><p>One address shared by several devices. The nearest one answers. (Just know the idea.)</p></div>
+  </div>
+  <div class="mcs" data-set="kinds"></div>
+</section>
+
+<!-- 8 PREFIX LENGTH -->
+<section class="step" id="s8" data-title="Prefix length (no more masks!)">
+  <div class="head"><h2>Prefix length (no more masks!)</h2><div class="sticker">Just a slash<br>and a number</div></div>
+  <p class="secnote">Book section 12.3.2</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>IPv6 doesn't use dotted subnet masks. The <strong>prefix length</strong> is a slash and a number from 0 to 128. It says how many bits, counting from the left, name the <strong>network</strong>. The rest name the <strong>device</strong>. Almost every LAN uses <strong>/64</strong>, because SLAAC builds a 64-bit interface ID.</p></div>
+  <div class="card">
+    <label for="plen"><strong>Slide the prefix length:</strong> <strong id="plenOut" style="font-size:1.4rem">/64</strong></label>
+    <input type="range" id="plen" min="0" max="128" value="64">
+    <div class="row" style="margin:.4rem 0"><button class="btn" type="button" data-p="48">/48</button><button class="btn primary" type="button" data-p="64">/64</button><button class="btn" type="button" data-p="128">/128</button></div>
+    <div class="hextets" id="pHex" aria-hidden="true"></div>
+    <div class="bitrow" id="pBits" aria-hidden="true"></div>
+    <p id="pMsg" style="font-weight:700;margin:.2rem 0" aria-live="polite"></p>
+    <p class="note" style="margin:0">Violet = network bits. Pink = device bits.</p>
+  </div>
+  <div class="card">
+    <h3>Find the network</h3>
+    <p style="margin-top:0">Write the <strong>network prefix</strong> for this address. Keep the network bits, make the rest zeros, and add the slash.</p>
+    <div class="bigaddr" id="npAddr"></div>
+    <div class="row"><input type="text" id="npIn" aria-label="Your network prefix" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Example: 2001:db8:1::/64" style="flex:1 1 14rem;font-family:var(--mono)"><button class="btn primary" type="button" id="npCheck">Check</button><button class="btn ghost" type="button" id="npShow">Show answer</button><button class="btn" type="button" id="npNew">Another</button></div>
+    <p class="fb" id="npFb" role="status" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- 9 GUA LLA ULA -->
+<section class="step" id="s9" data-title="Global, link-local, and unique local">
+  <div class="head"><h2>Global, link-local, and unique local</h2><div class="sticker">Who can<br>reach me?</div></div>
+  <p class="secnote">Book sections 12.3.3 to 12.3.7</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Most IPv6 interfaces have two unicast addresses. The <strong>GUA</strong> (global unicast address) is the public, internet-routable one. The <strong>LLA</strong> (link-local address) only works on the same link (subnet), and routers never forward it. <strong>Every</strong> IPv6 interface must have an LLA. A GUA is optional.</p></div>
+  <div class="three">
+    <div class="stat violet"><div class="big" style="font-size:1.3rem">GUA</div><p>Starts with 2 or 3 (<code>2000::/3</code>). Public, like a public IPv4 address.</p></div>
+    <div class="stat mint"><div class="big" style="font-size:1.3rem">LLA</div><p>Starts <code>fe80</code> to <code>febf</code> (<code>fe80::/10</code>). Same link only. Often the router's default-gateway address.</p></div>
+    <div class="stat yellow"><div class="big" style="font-size:1.3rem">Unique local</div><p><code>fc00::/7</code>. For inside a site. Not routed on the internet. Not commonly used yet.</p></div>
+  </div>
+  <p class="note">Examples in books use <code>2001:db8::/32</code>. It's reserved for documentation.</p>
+  <div class="card">
+    <h3>Address detective</h3>
+    <p style="margin-top:0">Type any IPv6 address and I'll tell you what kind it is and why.</p>
+    <div class="row"><input type="text" id="adIn" aria-label="IPv6 address to check" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Example: fe80::1" style="flex:1 1 14rem;font-family:var(--mono)"><button class="btn primary" type="button" id="adGo">Investigate</button></div>
+    <div class="row" style="margin-top:.5rem" id="adSamples"></div>
+    <div class="why" id="adOut" aria-live="polite" style="margin-top:.7rem">Try one of the samples.</div>
+  </div>
+  <div class="mcs" data-set="types"></div>
+</section>
+
+<!-- 10 GUA ANATOMY -->
+<section class="step" id="s10" data-title="Inside a global unicast address">
+  <div class="head"><h2>Inside a global unicast address</h2><div class="sticker">Street, building,<br>apartment</div></div>
+  <p class="secnote">Book sections 12.3.5 and 12.3.6</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>A GUA has three parts. The <strong>global routing prefix</strong> is the part your ISP gives you (the street). The <strong>subnet ID</strong> is the part you control (the building). The <strong>interface ID</strong> is the device itself (the apartment). With a /48 from your ISP and a /64 for each LAN, you get a 16-bit subnet ID and a 64-bit interface ID.</p></div>
+  <div class="card">
+    <h3>Tap the right hextet</h3>
+    <div class="hextets" id="gHex"></div>
+    <p class="qline" id="gQ"></p>
+    <p class="fb" id="gFb" aria-live="polite"></p>
+    <div class="row" style="gap:1rem;font-size:.95rem"><span><span class="hx net" style="padding:.1rem .6rem;min-width:0">prefix</span> from your ISP</span><span><span class="hx sub" style="padding:.1rem .6rem;min-width:0">subnet</span> you choose</span><span><span class="hx host" style="padding:.1rem .6rem;min-width:0">device</span> interface ID</span></div>
+  </div>
+  <div class="card">
+    <h3>How many subnets do I get?</h3>
+    <label for="isp"><strong>Prefix from your ISP:</strong> <strong id="ispOut" style="font-size:1.3rem">/48</strong></label>
+    <input type="range" id="isp" min="32" max="64" value="48">
+    <p id="ispMsg" style="font-weight:700;margin:.5rem 0 0" aria-live="polite"></p>
+  </div>
+  <p class="note">Bonus fact: unlike IPv4, you can assign the all-zeros and all-ones interface IDs, because there is no broadcast. (The all-zeros one is reserved for routers.)</p>
+  <div class="mcs" data-set="gua"></div>
+</section>
+
+<!-- 11 STATIC CONFIG -->
+<section class="step" id="s11" data-title="Setting addresses by hand">
+  <div class="head"><h2>Setting addresses by hand</h2><div class="sticker">Hands on<br>the keyboard</div></div>
+  <p class="secnote">Book sections 12.4.1 to 12.4.3</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>IOS commands for IPv6 look like the IPv4 ones with <code>ipv6</code> in place of <code>ip</code>. The IPv6 command is <code>ipv6 address address/prefix-length</code>, with <strong>no space</strong> before the slash. To pick your own link-local address, add the word <code>link-local</code> on the end.</p></div>
+  <div class="tabs" role="group" aria-label="Choose a device"><button class="btn tab" type="button" id="cTabR" aria-pressed="true">Cisco router (R1)</button><button class="btn tab" type="button" id="cTabW" aria-pressed="false">Windows PC</button></div>
+
+  <div id="cRouter">
+    <div class="card">
+      <h3>Mini lab: configure R1</h3>
+      <p style="margin-top:0">You are already in privileged mode (<code>R1#</code>). Finish all the tasks. This is a simplified practice simulator.</p>
+      <ul class="tasklist" id="simTasks"></ul>
+      <div class="term" id="term">
+        <pre id="termOut" aria-live="polite" role="log"></pre>
+        <div class="tline"><span class="pr" id="prompt">R1#</span><input id="cmd" type="text" aria-label="Type a command" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      </div>
+      <div class="row" style="margin-top:.6rem"><button class="btn" type="button" id="simHint">I'm stuck: hint</button><button class="btn ghost" type="button" id="simReset">Start over</button></div>
+      <p class="fb" id="simFb" aria-live="polite"></p>
+      <details class="acc"><summary>Commands this simulator understands</summary>
+        <p><code>configure terminal</code>, <code>interface g0/0/0</code> (or <code>g0/0/1</code>, <code>s0/1/0</code>), <code>ipv6 address 2001:db8:acad:1::1/64</code>, <code>ipv6 address fe80::1:1 link-local</code>, <code>no shutdown</code>, <code>ipv6 unicast-routing</code>, <code>exit</code>, <code>end</code>, <code>show ipv6 interface brief</code>, <code>show ipv6 route</code>. Short forms like <code>conf t</code> and <code>sh ipv6 int br</code> work too.</p></details>
+    </div>
+  </div>
+
+  <div id="cWin" hidden>
+    <div class="card">
+      <h3>Set up PC1 by hand</h3>
+      <p style="margin-top:0">R1's LAN is <code>2001:db8:acad:1::/64</code>. R1's interface has the address <code>2001:db8:acad:1::1</code> and the link-local address <code>fe80::1:1</code>. Fill in PC1's IPv6 settings.</p>
+      <div class="rpf">
+        <div><label for="winAddr">IPv6 address</label><input type="text" id="winAddr" autocomplete="off" spellcheck="false" style="font-family:var(--mono)" placeholder="2001:db8:acad:1::10"></div>
+        <div><label for="winLen">Subnet prefix length</label><input type="text" id="winLen" autocomplete="off" inputmode="numeric" style="font-family:var(--mono)" placeholder="64"></div>
+        <div style="grid-column:1/-1"><label for="winGw">Default gateway</label><input type="text" id="winGw" autocomplete="off" spellcheck="false" style="font-family:var(--mono)" placeholder="Which of R1's addresses?"></div>
+      </div>
+      <div class="row"><button class="btn primary" type="button" id="winCheck">Check PC1's settings</button></div>
+      <p class="fb" id="winFb" aria-live="polite"></p>
+    </div>
+    <p class="note">Static addresses on every PC don't scale. That's why most networks use dynamic addressing, which is the next big topic.</p>
+  </div>
+  <div class="mcs" data-set="static"></div>
+</section>
+
+<!-- 12 RS RA -->
+<section class="step" id="s12" data-title="How a device asks for help (RS and RA)">
+  <div class="head"><h2>How a device asks for help</h2><div class="sticker">Ask the router.<br>It answers.</div></div>
+  <p class="secnote">Book section 12.5.1</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Most devices get their global address automatically. A new device can <em>ask</em> with a <strong>Router Solicitation (RS)</strong>. A router answers with a <strong>Router Advertisement (RA)</strong>. These are ICMPv6 messages. The RA is a <em>suggestion</em>: the device's operating system makes the final call.</p></div>
+  <div class="chat" id="raChat" aria-live="polite"></div>
+  <div class="row" style="margin:.8rem 0"><button class="btn primary" type="button" id="raNext">Next message</button><button class="btn ghost" type="button" id="raReset">Replay</button></div>
+  <div class="card"><h3>What's inside an RA?</h3><ul style="margin:0;padding-left:1.2rem"><li>The network prefix and prefix length (which network you're on)</li><li>The default gateway (the router's own link-local address)</li><li>DNS server addresses and a domain name</li></ul><p class="note">A router must be turned into an IPv6 router with <code>ipv6 unicast-routing</code> (it's off by default) before it sends RAs.</p></div>
+  <div class="mcs" data-set="ra"></div>
+</section>
+
+<!-- 13 THREE METHODS -->
+<section class="step" id="s13" data-title="Three ways to get a global address">
+  <div class="head"><h2>Three ways to get a global address</h2><div class="sticker">Who tells<br>me what?</div></div>
+  <p class="secnote">Book sections 12.5.2 to 12.5.4</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>The RA message tells your device which of three methods to use. <strong>Method 1 (SLAAC):</strong> "I have everything. Build your own address." <strong>Method 2 (SLAAC + stateless DHCPv6):</strong> "Build your own address, but ask a server for extras like DNS." <strong>Method 3 (stateful DHCPv6):</strong> "I'm your gateway, but ask the server for your address and everything else." (Stateful works like IPv4 DHCP: the server keeps a list.)</p></div>
+  <div class="card scroll">
+    <h3>Who provides it?</h3>
+    <p style="margin-top:0">For each method, choose where the device gets each piece of information.</p>
+    <table class="tbl" id="mx"></table>
+    <div class="row"><button class="btn primary" type="button" id="mxCheck">Check my table</button><button class="btn ghost" type="button" id="mxShow">Show the answers</button></div>
+    <p class="fb" id="mxFb" aria-live="polite"></p>
+  </div>
+  <p class="note">The default gateway only ever comes from the RA message. A DHCPv6 server never provides it.</p>
+  <div class="mcs" data-set="methods"></div>
+</section>
+
+<!-- 14 INTERFACE ID -->
+<section class="step" id="s14" data-title="Building the interface ID">
+  <div class="head"><h2>Building the interface ID</h2><div class="sticker">EUI-64 or<br>random?</div></div>
+  <p class="secnote">Book sections 12.5.5 to 12.5.7</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>With SLAAC the router gives the <em>prefix</em>, and the device must invent the last 64 bits. There are two ways. <strong>EUI-64</strong> builds it from the device's MAC address: split the MAC in half, put <strong>fffe</strong> in the middle, and flip the <strong>7th bit</strong>. The other way is a <strong>random</strong> 64-bit number, which protects privacy because the MAC can't be traced.</p></div>
+  <div class="card">
+    <h3>EUI-64 builder</h3>
+    <label for="mac"><strong>MAC address</strong></label>
+    <div class="row"><input type="text" id="mac" value="fc99.4775.cee0" autocomplete="off" spellcheck="false" style="font-family:var(--mono)"><button class="btn" type="button" id="macRand">Random MAC</button></div>
+    <p class="fb bad" id="macErr" aria-live="polite"></p>
+    <ol class="euiSteps" id="euiOut" aria-live="polite"></ol>
+  </div>
+  <div class="card">
+    <h3>EUI-64 or random?</h3>
+    <p style="margin-top:0">Hint: look for <code>fffe</code> in the middle of the interface ID.</p>
+    <div id="eqGame"></div>
+  </div>
+  <p class="note">Windows has used random interface IDs since Windows Vista. To make sure an address isn't already taken, a device runs duplicate address detection (DAD), like asking "does anyone else have this?"</p>
+  <div class="mcs" data-set="iid"></div>
+</section>
+
+<!-- 15 LLA + VERIFY -->
+<section class="step" id="s15" data-title="Link-local addresses and checking your work">
+  <div class="head"><h2>Link-local addresses and checking your work</h2><div class="sticker">Read the output<br>like a pro</div></div>
+  <p class="secnote">Book sections 12.6.1 to 12.6.4</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>A device builds its own link-local address using <code>fe80::</code> plus an interface ID (EUI-64 or random). Windows usually uses the same method for its global and link-local addresses. A Cisco router makes an LLA by itself as soon as you give an interface a GUA, using EUI-64. That address is long and hard to remember, so people often type routers' LLAs by hand, like <code>fe80::1:1</code>. Three commands help you verify: <code>show ipv6 interface brief</code>, <code>show ipv6 route</code>, and <code>ping</code>.</p></div>
+  <div class="card">
+    <h3>Read the output</h3>
+    <div class="tabs" role="group" aria-label="Choose an output"><button class="btn tab" type="button" data-o="0" aria-pressed="true">Windows ipconfig</button><button class="btn tab" type="button" data-o="1" aria-pressed="false">show ipv6 interface brief</button><button class="btn tab" type="button" data-o="2" aria-pressed="false">show ipv6 route</button></div>
+    <div class="out" id="outBox"></div>
+    <p class="qline" id="outQ" aria-live="polite"></p>
+    <p class="fb" id="outFb" aria-live="polite"></p>
+  </div>
+  <div class="mcs" data-set="verify"></div>
+</section>
+
+<!-- 16 MULTICAST -->
+<section class="step" id="s16" data-title="Multicast addresses">
+  <div class="head"><h2>Multicast addresses</h2><div class="sticker">Group chat<br>rules</div></div>
+  <p class="secnote">Book sections 12.7.1 to 12.7.3</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>IPv6 multicast addresses start with <code>ff00::/8</code> and are only ever <em>destinations</em>. Two well-known groups: <strong>ff02::1</strong> (all nodes, everyone on the link) and <strong>ff02::2</strong> (all routers). The <strong>2</strong> means "stay on this link". A <strong>solicited-node</strong> multicast address is a special one that lets the network card ignore messages that aren't for it, so the CPU isn't bothered.</p></div>
+  <div class="card">
+    <h3>Who receives it?</h3>
+    <p style="margin-top:0">Pick a destination address and watch who gets the message.</p>
+    <div class="net5" id="mcDevs"></div>
+    <div class="row" id="mcBtns"></div>
+    <p class="fb" id="mcMsg" aria-live="polite" style="font-size:1.05rem"></p>
+  </div>
+  <div class="card">
+    <h3>Bonus peek: build a solicited-node address</h3>
+    <p style="margin-top:0">Take <code>ff02::1:ff</code> and add the last 24 bits (6 hex digits) of the unicast address.</p>
+    <div class="row"><input type="text" id="snIn" aria-label="Unicast address" value="2001:db8:acad:1:fe99:47ff:fe75:cee0" autocomplete="off" spellcheck="false" style="flex:1 1 16rem;font-family:var(--mono)"><button class="btn primary" type="button" id="snGo">Build it</button></div>
+    <p class="fb ok" id="snOut" aria-live="polite" style="font-family:var(--mono)"></p>
+  </div>
+  <div class="mcs" data-set="mcast"></div>
+</section>
+
+<!-- 17 SUBNET ID -->
+<section class="step" id="s17" data-title="Subnetting is just counting">
+  <div class="head"><h2>Subnetting is just counting</h2><div class="sticker">No binary.<br>Promise.</div></div>
+  <p class="secnote">Book sections 12.8.1 and 12.8.2</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>IPv4 subnetting means borrowing bits. IPv6 was built for subnets: there's a dedicated <strong>subnet ID</strong> hextet. With a /48 from your ISP, that's 16 bits, so you can make <strong>65,536</strong> /64 subnets. To get the next subnet, just count up in hex: 8, 9, a, b, c, d, e, f, 10, 11...</p></div>
+  <div class="card">
+    <h3>Hex counter</h3>
+    <div class="counter" id="ctr" aria-live="polite"></div>
+    <div class="row" style="margin-top:.6rem;justify-content:center"><button class="btn" type="button" id="cMinus">−1</button><button class="btn primary" type="button" id="cPlus">+1 subnet</button><button class="btn" type="button" id="c9">Jump to 0009</button><button class="btn" type="button" id="cff">Jump to 00ff</button><button class="btn ghost" type="button" id="cReset">Reset</button></div>
+  </div>
+  <div class="card">
+    <h3>What's the next subnet?</h3>
+    <p style="margin-top:0">Type the next /64 (just the new subnet ID hextet is fine).</p>
+    <div class="bigaddr" id="nsQ"></div>
+    <div class="row"><input type="text" id="nsIn" aria-label="Next subnet" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Example: a" style="flex:1 1 12rem;font-family:var(--mono)"><button class="btn primary" type="button" id="nsCheck">Check</button><button class="btn ghost" type="button" id="nsShow">Show answer</button><button class="btn" type="button" id="nsNew">Another</button></div>
+    <p class="fb" id="nsFb" role="status" aria-live="polite"></p>
+  </div>
+  <div class="mcs" data-set="subnet"></div>
+</section>
+
+<!-- 18 PLANNER -->
+<section class="step" id="s18" data-title="Plan a subnetted network">
+  <div class="head"><h2>Plan a subnetted network</h2><div class="sticker">You're the<br>network admin</div></div>
+  <p class="secnote">Book sections 12.8.3 and 12.8.4</p>
+  <div class="plain speak"><span class="lbl">In plain English</span><p>Your ISP gave you <code>2001:db8:acad::/48</code>. This network needs <strong>five</strong> subnets: four LANs and the link between the two routers. Pick a subnet ID for each. Even the router-to-router link gets a /64, because IPv6 doesn't need to save addresses.</p></div>
+  <div class="card">
+    <h3>Assign the subnet IDs</h3>
+    <div class="plan" id="plan"></div>
+    <div class="row" style="margin-top:.8rem"><button class="btn" type="button" id="planPreset">Use 1 through 5</button><button class="btn primary" type="button" id="planGo">Build the router configs</button></div>
+    <p class="fb" id="planFb" aria-live="polite"></p>
+  </div>
+  <div id="planOut" hidden>
+    <div class="two">
+      <div><h3>R1</h3><div class="cfg" id="cfgR1"></div></div>
+      <div><h3>R2</h3><div class="cfg" id="cfgR2"></div></div>
+    </div>
+    <div class="row" style="margin-top:.6rem"><button class="btn" type="button" id="planCopy">Copy both configs</button></div>
+    <p class="copied" id="planCopied" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- 19 QUIZ -->
+<section class="step" id="s19" data-title="Check your understanding">
+  <div class="head"><h2>Check your understanding</h2><div class="sticker">Final boss</div></div>
+  <p style="margin-top:0">Fifteen questions covering the whole module. Wrong answers just gray out, so keep trying.</p>
+  <p class="score" id="quizScore" aria-live="polite">First-try score: 0 of 15 answered.</p>
+  <div class="mcs" data-set="quiz"></div>
+</section>
+
+<!-- 20 SUMMARY -->
+<section class="step" id="s20" data-title="Summary and next steps">
+  <div class="head"><h2>Summary and next steps</h2><div class="sticker">You made it</div></div>
+  <div class="tl">
+    <div>🌎 IPv4 ran low on addresses. IPv6 uses 128-bit addresses, and the two coexist using dual stack, tunneling, and translation.</div>
+    <div>🔎 Write IPv6 as 8 hextets of hex. Drop leading zeros, and use <code>::</code> once, on the longest run of zero hextets.</div>
+    <div>🧩 Types: unicast, multicast, anycast. No broadcast. Prefix lengths replace masks, and /64 is the LAN standard.</div>
+    <div>🏷️ A GUA = global routing prefix + subnet ID + interface ID. Every interface also needs a link-local address (<code>fe80::/10</code>).</div>
+    <div>⌨️ Static: <code>ipv6 address address/length</code> and <code>ipv6 address fe80::1:1 link-local</code>.</div>
+    <div>📡 Dynamic: RS and RA, then SLAAC, SLAAC + stateless DHCPv6, or stateful DHCPv6. The interface ID is EUI-64 or random.</div>
+    <div>✅ Verify with <code>show ipv6 interface brief</code>, <code>show ipv6 route</code>, and <code>ping</code>.</div>
+    <div>📢 Multicast starts with <code>ff</code>: <code>ff02::1</code> all nodes, <code>ff02::2</code> all routers.</div>
+    <div>🔢 Subnet by counting up the subnet ID in hex.</div>
+  </div>
+  <div class="card">
+    <h3>Time for hands-on practice</h3>
+    <ul class="nextsteps" style="margin:0;padding-left:1.2rem">
+      <li>Packet Tracer 12.6.6: Configure IPv6 Addressing</li>
+      <li>Packet Tracer 12.9.1: Implement a Subnetted IPv6 Addressing Scheme</li>
+      <li>Lab 12.7.4: Identify IPv6 Addresses</li>
+      <li>Lab 12.9.2: Configure IPv6 Addresses on Network Devices</li>
+    </ul>
+  </div>
+  <section class="card" id="reportCard" aria-labelledby="rph">
+    <h3 id="rph">Share your score</h3>
+    <p id="rpNote" style="margin:.2rem 0;color:var(--muted)"></p>
+    <p class="score" id="finalScore"></p>
+    <div class="rpf">
+      <div><label for="rpName">Your name or student ID</label><input type="text" id="rpName" autocomplete="off"></div>
+      <div><label for="rpPeriod">Class period (optional)</label><input type="text" id="rpPeriod" autocomplete="off"></div>
+    </div>
+    <div class="row"><button class="btn primary" type="button" id="rpSend" disabled>Send my score</button><button class="btn" type="button" id="rpCopy" disabled>Copy my score</button></div>
+    <div class="fb" id="rpMsg" role="status" aria-live="polite"></div>
+    <input type="text" id="rpText" readonly hidden aria-label="Your score text. Select it and copy it." style="width:100%;margin-top:.5rem;font-family:var(--mono)">
+  </section>
+</section>
+
+</main>
+
+<nav class="pager" aria-label="Lesson navigation">
+  <button class="btn" type="button" id="back">← Back</button>
+  <span class="count" id="count">1 of 20</span>
+  <button class="btn primary" type="button" id="next">Next →</button>
+</nav>
+
+<script>
+(function(){
+/* =============== Teacher settings =============== */
+const CONFIG={
+  endpoint:'',   // paste your Apps Script web app URL here (example: 'https://script.google.com/macros/s/XXXX/exec')
+  key:'',        // optional class code; must match CLASS_KEY in the Apps Script
+  tool:'Module 12 IPv6 Addressing'
+};
+
+/*LIB-START*/
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+function expand(a){
+  a=String(a).trim().toLowerCase();
+  if(!/^[0-9a-f:]+$/.test(a))return null;
+  const dbl=a.split('::');
+  if(dbl.length>2)return null;
+  const parse=s=>s===''?[]:s.split(':');
+  const head=parse(dbl[0]),tail=dbl.length===2?parse(dbl[1]):[];
+  if([...head,...tail].some(g=>!/^[0-9a-f]{1,4}$/.test(g)))return null;
+  let groups;
+  if(dbl.length===2){
+    const miss=8-head.length-tail.length;
+    if(miss<1)return null;
+    groups=[...head,...Array(miss).fill('0'),...tail];
+  }else{
+    if(head.length!==8)return null;
+    groups=head;
+  }
+  return groups.map(g=>g.padStart(4,'0'));
+}
+function stripZeros(groups){return groups.map(g=>g.replace(/^0+(?=.)/,''));}
+/* Book rule: :: may replace one or more all-zero hextets; use the longest run, the first run on a tie. */
+function compress(groups){
+  const g=stripZeros(groups);
+  let bs=-1,bl=0;
+  for(let i=0;i<8;){
+    if(g[i]==='0'){let j=i;while(j<8&&g[j]==='0')j++;if(j-i>bl){bl=j-i;bs=i;}i=j;}else i++;
+  }
+  if(bl<1)return g.join(':');
+  return g.slice(0,bs).join(':')+'::'+g.slice(bs+bl).join(':');
+}
+function zeroRuns(groups){const r=[];for(let i=0;i<8;){if(groups[i]==='0000'||groups[i]==='0'){let j=i;while(j<8&&(groups[j]==='0000'||groups[j]==='0'))j++;r.push(j-i);i=j;}else i++;}return r;}
+function randomAddress(){
+  const g=Array(8).fill(null);
+  const L=3+rnd(3),s=rnd(8-L+1);
+  for(let i=s;i<s+L;i++)g[i]='0000';
+  if(Math.random()<0.5){
+    const l2=1+rnd(Math.min(2,L-1));
+    for(let t=0;t<30;t++){
+      const p=rnd(8-l2+1);let ok=true;
+      for(let i=p-1;i<=p+l2;i++){if(i>=0&&i<8&&g[i]!==null)ok=false;}
+      if(ok){for(let i=p;i<p+l2;i++)g[i]='0000';break;}
+    }
+  }
+  for(let i=0;i<8;i++)if(g[i]===null)g[i]=(1+rnd(0xffff)).toString(16).padStart(4,'0');
+  return g.join(':');
+}
+function parseMac(s){
+  s=String(s).trim();
+  let h=null;
+  if(/^([0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(s))h=s.replace(/[:-]/g,'');
+  else if(/^([0-9a-f]{4}[.:-]){2}[0-9a-f]{4}$/i.test(s))h=s.replace(/[.:-]/g,'');
+  else if(/^[0-9a-f]{12}$/i.test(s))h=s;
+  if(!h)return null;
+  return h.toLowerCase().match(/../g).map(x=>parseInt(x,16));
+}
+function eui64(b){return [b[0]^2,b[1],b[2],0xff,0xfe,b[3],b[4],b[5]];}
+const hx=n=>n.toString(16).padStart(2,'0');
+const idGroupsOf=e=>[hx(e[0])+hx(e[1]),hx(e[2])+hx(e[3]),hx(e[4])+hx(e[5]),hx(e[6])+hx(e[7])];
+const SCALE=['','thousand','million','billion','trillion','quadrillion','quintillion','sextillion','septillion','octillion','nonillion','decillion','undecillion'];
+function commas(s){return s.replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function bigName(v){
+  const s=v.toString(),d=s.length,idx=Math.floor((d-1)/3);
+  if(idx===0)return s;
+  const lead=(d-1)%3+1;
+  return parseFloat(s.slice(0,lead)+'.'+s.slice(lead,lead+2)).toFixed(2)+' '+(SCALE[idx]||'');
+}
+function classify(groups){
+  const g=groups.map(x=>parseInt(x,16));
+  if(g.every(v=>v===0))return 'unspec';
+  if(g.slice(0,7).every(v=>v===0)&&g[7]===1)return 'loop';
+  const f=g[0];
+  if(f>=0xff00)return 'multi';
+  if(f>=0xfe80&&f<=0xfebf)return 'lla';
+  if(f>=0xfc00&&f<=0xfdff)return 'ula';
+  if(f>=0x2000&&f<=0x3fff)return 'gua';
+  return 'other';
+}
+function networkOf(groups,len){
+  const v=BigInt('0x'+groups.join(''));
+  const all=(1n<<128n)-1n;
+  const mask=all^((1n<<BigInt(128-len))-1n);
+  const hexs=(v&mask).toString(16).padStart(32,'0');
+  return hexs.match(/.{4}/g);
+}
+function solicited(groups){return compress(['ff02','0000','0000','0000','0000','0001','ff'+groups[6].slice(2),groups[7]]);}
+const verdict=(orig,prop)=>{
+  const og=expand(orig),pg=expand(prop);
+  if(!pg)return 'broken';
+  if(pg.join(':')!==og.join(':'))return 'wrong';
+  return prop.trim().toLowerCase()===compress(og)?'correct':'notbest';
+};
+/*LIB-END*/
+
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IT=new URLSearchParams(location.search).has('test');
+
+/* =============== Score tracking =============== */
+const Score={
+  done:new Map(),
+  complete(key,first){
+    if(this.done.has(key))return;
+    this.done.set(key,!!first);
+    $('#mini').textContent=this.done.size+' done';
+    updateFinal();Reporter.update();
+    if(key.startsWith('q-'))updateQuizScore();
+  },
+  count(p){let n=0;for(const k of this.done.keys())if(k.startsWith(p))n++;return n;},
+  countFirst(p){let n=0;for(const [k,v] of this.done)if(k.startsWith(p)&&v)n++;return n;},
+  get finished(){return this.done.size;},
+  get firstTry(){let n=0;for(const v of this.done.values())if(v)n++;return n;}
+};
+function updateFinal(){$('#finalScore').textContent=`Activities completed: ${Score.finished}. Right on the first try: ${Score.firstTry}.`;}
+function updateQuizScore(){$('#quizScore').textContent=`First-try score: ${Score.countFirst('q-')} right out of ${Score.count('q-')} answered (of 15).`;}
+function detailText(){return `Quiz first try: ${Score.countFirst('q-')}/${Score.count('q-')}; check-yourself: ${Score.countFirst('mc-')}/${Score.count('mc-')}; practice done: ${Score.count('pr-')}; router lab: ${Score.done.has('sim')?'done':'not done'}`;}
+
+/* =============== Stepper =============== */
+const steps=$$('.step');
+let cur=0,big=false;
+const sel=$('#jump');
+steps.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+s.dataset.title;sel.appendChild(o);});
+function go(i){
+  cur=Math.max(0,Math.min(steps.length-1,i));
+  steps.forEach((s,k)=>{s.hidden=k!==cur;});
+  $('#bar').style.width=((cur+1)/steps.length*100)+'%';
+  $('.progress').setAttribute('aria-valuenow',cur+1);
+  $('#count').textContent=(cur+1)+' of '+steps.length;
+  sel.value=cur;
+  $('#back').disabled=cur===0;
+  $('#next').disabled=cur===steps.length-1;
+  window.scrollTo(0,0);
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  const h=steps[cur].querySelector('h1,h2');if(h){h.tabIndex=-1;h.focus({preventScroll:true});}
+}
+const goId=id=>go(steps.findIndex(s=>s.id===id));
+$('#back').addEventListener('click',()=>go(cur-1));
+$('#next').addEventListener('click',()=>go(cur+1));
+sel.addEventListener('change',()=>go(+sel.value));
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-go="next"]');if(b)go(cur+1);
+  const j=e.target.closest('[data-jump]');if(j)goId(j.dataset.jump);
+});
+document.addEventListener('keydown',e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
+  const t=e.target.tagName;
+  if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+$('#bigText').addEventListener('click',e=>{
+  big=!big;document.documentElement.style.fontSize=big?'125%':'';
+  e.currentTarget.setAttribute('aria-pressed',big?'true':'false');e.currentTarget.classList.toggle('on',big);
+});
+$('#speak').addEventListener('click',()=>{
+  if(!('speechSynthesis' in window)){return;}
+  speechSynthesis.cancel();
+  const txt=[...steps[cur].querySelectorAll('h1,h2,.speak')].map(e=>e.textContent.replace(/\s+/g,' ').trim()).join('. ');
+  const u=new SpeechSynthesisUtterance(txt);u.rate=0.95;speechSynthesis.speak(u);
+});
+
+/* =============== Helpers: tabs, multiple choice, click tasks =============== */
+function mcq(host,{q,opts,ans,why,key,shuf=true,mono=false}){
+  const d=document.createElement('div');d.className='card mc';
+  d.innerHTML='<p class="mq"></p><div class="choices"></div><p class="fb" role="status" aria-live="polite"></p>';
+  d.querySelector('.mq').textContent=q;
+  const box=d.querySelector('.choices'),fb=d.querySelector('.fb');
+  const order=opts.map((o,i)=>i);if(shuf)shuffle(order);
+  let wrong=0,done=false;
+  order.forEach(i=>{
+    const b=document.createElement('button');b.type='button';b.className='btn'+(mono?' mono':'');b.textContent=opts[i];b.dataset.i=i;
+    b.addEventListener('click',()=>{
+      if(done)return;
+      if(i===ans){done=true;b.classList.add('ok');[...box.children].forEach(x=>{if(x!==b)x.disabled=true;});fb.textContent='✓ '+why;fb.className='fb ok';Score.complete(key,wrong===0);}
+      else{wrong++;b.classList.add('bad');b.disabled=true;fb.textContent='✗ Not that one. Try again.';fb.className='fb bad';}
+    });
+    box.appendChild(b);
+  });
+  host.appendChild(d);
+}
+function setTabs(btns,panels,onShow){
+  btns.forEach((b,i)=>b.addEventListener('click',()=>{
+    btns.forEach((x,k)=>x.setAttribute('aria-pressed',k===i?'true':'false'));
+    panels.forEach((p,k)=>{if(p)p.hidden=k!==i;});
+    if(onShow)onShow(i);
+  }));
+}
+
+/* =============== Content data =============== */
+const MC={
+ why:[{key:'mc-why',q:'What helped SLOW the use of IPv4 addresses, without solving the problem?',opts:['Private addresses with NAT','Making IPv4 addresses longer','Turning off the internet at night','Using only IPv6 cables'],ans:0,why:'Private addresses plus NAT let many devices share a few public addresses, which bought time.'}],
+ coexist:[
+  {key:'mc-co1',q:'An office network runs IPv4 and IPv6 on the same devices at the same time. Which bridge is that?',opts:['Dual stack','Tunneling','Translation (NAT64)'],ans:0,why:'Dual stack means devices run both protocols side by side.',shuf:false},
+  {key:'mc-co2',q:'Two IPv6 sites must talk across a provider link that only carries IPv4. What helps?',opts:['Dual stack','Tunneling','Translation (NAT64)'],ans:1,why:'Tunneling wraps the IPv6 packet inside an IPv4 packet so it can cross.',shuf:false},
+  {key:'mc-co3',q:'An IPv6-only phone must reach an old server that only has IPv4. What helps?',opts:['Dual stack','Tunneling','Translation (NAT64)'],ans:2,why:'NAT64 translates between IPv6 and IPv4 packets.',shuf:false}],
+ meet:[
+  {key:'mc-me1',q:'How many hex digits are in a full IPv6 address?',opts:['8','16','32','128'],ans:2,why:'8 hextets × 4 hex digits = 32 hex digits (which is 128 bits).',shuf:false},
+  {key:'mc-me2',q:'Which of these is NOT a legal hexadecimal digit?',opts:['b','7','g','f'],ans:2,why:'Hex only goes 0 to 9 and then a to f.',shuf:false}],
+ kinds:[
+  {key:'mc-ki1',q:'A router announces itself to every IPv6 device on the link. Which kind of address does it send to?',opts:['Multicast','Unicast','Anycast'],ans:0,why:'One message to a group (here, all nodes) is multicast.',shuf:false},
+  {key:'mc-ki2',q:'Your PC sends a file to one specific printer. Which kind is that?',opts:['Multicast','Unicast','Anycast'],ans:1,why:'One sender to one receiver is unicast.',shuf:false},
+  {key:'mc-ki3',q:'Which kind of address does IPv6 NOT use?',opts:['Broadcast','Unicast','Multicast','Anycast'],ans:0,why:'IPv6 has no broadcast. The all-nodes multicast group does a similar job.'}],
+ types:[
+  {key:'mc-ty1',q:'Which address type must EVERY IPv6-enabled interface have?',opts:['Link-local (LLA)','Global unicast (GUA)','Unique local','Anycast'],ans:0,why:'The LLA is required. A GUA is optional.'},
+  {key:'mc-ty2',q:'Can a router forward a packet whose source or destination is a link-local address?',opts:['No, never','Yes, to the internet','Yes, but only on weekdays'],ans:0,why:'Link-local packets stay on their link and are never forwarded by routers.',shuf:false}],
+ gua:[
+  {key:'mc-gu1',q:'Your ISP gives you a /48 and you use /64 LANs. How many bits are in your subnet ID?',opts:['8','16','48','64'],ans:1,why:'64 − 48 = 16 bits for the subnet ID.',shuf:false},
+  {key:'mc-gu2',q:'Which part of a GUA does the ISP assign?',opts:['The global routing prefix','The subnet ID','The interface ID'],ans:0,why:'The ISP hands out the global routing prefix. You choose the subnet IDs.',shuf:false}],
+ static:[
+  {key:'mc-st1',q:'What is the best-practice default gateway for a host?',opts:["The router's link-local address","The host's own address","The DNS server's address",'ff02::2'],ans:0,why:"Using the router's LLA is best practice. The router's GUA also works."},
+  {key:'mc-st2',q:'Which command sets a link-local address by hand?',opts:['ipv6 address fe80::1:1 link-local','ipv6 link-local fe80::1:1','ip address fe80::1:1 link-local','ipv6 address fe80::1:1/64 local'],ans:0,mono:true,why:'You add the word link-local after the address (no prefix length).'}],
+ ra:[
+  {key:'mc-ra1',q:'Which command lets a Cisco router send RA messages?',opts:['ipv6 unicast-routing','ipv6 enable-ra','no shutdown','ipv6 address'],ans:0,mono:true,why:'IPv6 routing is off by default. ipv6 unicast-routing turns it on.'},
+  {key:'mc-ra2',q:'Which message does a host send to ask for network information?',opts:['Router Solicitation (RS)','Router Advertisement (RA)','Ping reply'],ans:0,why:'RS = "any routers here?". RA = the router\'s answer.',shuf:false}],
+ methods:[
+  {key:'mc-me3',q:'Where can a host learn its default gateway automatically?',opts:['Only from the RA message','From a DHCPv6 server','From the ISP\'s website','From its MAC address'],ans:0,why:'The default gateway only ever comes from the RA message.'}],
+ iid:[
+  {key:'mc-ii1',q:'In the EUI-64 process, which bit of the first byte gets flipped?',opts:['The 7th bit','The 1st bit','The last bit','No bits are flipped'],ans:0,why:'The 7th bit (the universal/local bit) is flipped.',shuf:false},
+  {key:'mc-ii2',q:'Why do many devices use random interface IDs?',opts:['So the MAC address can\'t be traced','Random IDs are shorter','Routers require it','It makes the ping faster'],ans:0,why:'Random IDs help protect privacy.'}],
+ verify:[
+  {key:'mc-vf1',q:'What does ping ::1 test?',opts:["Your own device's IPv6 setup (loopback)",'Your default gateway','Every device on the link','The internet connection'],ans:0,why:'::1 is the loopback address, so it tests your own IPv6 stack.'},
+  {key:'mc-vf2',q:'Why don\'t link-local addresses show up as routes in the IPv6 routing table?',opts:['They are not routable','They are too long','They are encrypted','They only work on Windows'],ans:0,why:'LLAs are not routable, so routers do not install them as routes.'}],
+ mcast:[
+  {key:'mc-mc1',q:'Which multicast address do RS messages go to?',opts:['ff02::2 (all routers)','ff02::1 (all nodes)','fe80::1','::1'],ans:0,mono:true,why:'Hosts send RS to all routers so only routers have to answer.'},
+  {key:'mc-mc2',q:'Can a multicast address be used as a SOURCE address?',opts:['No, only as a destination','Yes, always','Only on routers'],ans:0,why:'Multicast addresses are destination-only.',shuf:false}],
+ subnet:[
+  {key:'mc-sn1',q:'With a /48 prefix, how many /64 subnets can you make?',opts:['65,536','256','1,024','4,294,967,296'],ans:0,why:'16 subnet-ID bits give 2^16 = 65,536 subnets.',shuf:false}],
+ quiz:[
+  {key:'q-1',q:'Which problem was the biggest reason IPv6 was created?',opts:['IPv4 was running out of addresses','IPv4 was too slow on Wi-Fi','IPv4 cables were too short','IPv4 could not use hexadecimal'],ans:0,why:'The shrinking supply of IPv4 addresses drove the move to IPv6.'},
+  {key:'q-2',q:'How many bits are in one hextet?',opts:['4','8','16','32'],ans:2,why:'A hextet is 4 hex digits, and each digit is 4 bits, so 16 bits.',shuf:false},
+  {key:'q-3',q:'What is the best shortened form of 2001:0db8:0000:0000:0000:0000:0000:0001?',opts:['2001:db8::1','2001:db8:0::1','2001:0db8::1','2001:db8::0:1'],ans:0,mono:true,why:'Drop leading zeros, then replace the longest zero run with ::.'},
+  {key:'q-4',q:'Which of these is a link-local address?',opts:['fe80::1:1','2001:db8::1','ff02::1','fd12:3456::1'],ans:0,mono:true,why:'Link-local addresses start fe80 to febf.'},
+  {key:'q-5',q:'Which address type must every IPv6-enabled interface have?',opts:['Link-local','Global unicast','Unique local','Broadcast'],ans:0,why:'Every IPv6 interface needs an LLA.'},
+  {key:'q-6',q:'You get a /48 and use /64 subnets. How many bits are in the subnet ID?',opts:['8','16','48','64'],ans:1,why:'64 − 48 = 16.',shuf:false},
+  {key:'q-7',q:'Which message does a host send to ask "Are there any routers here?"',opts:['Router Solicitation (RS)','Router Advertisement (RA)','ARP request','Echo reply'],ans:0,why:'RS is the question and RA is the answer.'},
+  {key:'q-8',q:'With SLAAC, who creates the interface ID?',opts:['The device itself','The DHCPv6 server','The ISP','The default gateway'],ans:0,why:'The router supplies the prefix and the device builds its own interface ID.'},
+  {key:'q-9',q:'You spot fffe in the middle of an interface ID. What is the likely source?',opts:['The EUI-64 process','A random number','A DHCPv6 server','Dual stack'],ans:0,why:'EUI-64 inserts fffe into the middle of the MAC address.'},
+  {key:'q-10',q:'Which command makes a Cisco router an IPv6 router that can send RAs?',opts:['ipv6 unicast-routing','ipv6 enable-ra','ip routing6','no shutdown'],ans:0,mono:true,why:'ipv6 unicast-routing enables IPv6 routing.'},
+  {key:'q-11',q:'Which multicast address reaches all IPv6 routers on the local link?',opts:['ff02::2','ff02::1','ff00::1','fe80::2'],ans:0,mono:true,why:'ff02::2 is the all-routers group.'},
+  {key:'q-12',q:'What is the next /64 subnet after 2001:db8:acad:9::/64?',opts:['2001:db8:acad:a::/64','2001:db8:acad:10::/64','2001:db8:acad:9a::/64','2001:db8:acad:9::1/64'],ans:0,mono:true,why:'Count in hex: 9 is followed by a.',shuf:false},
+  {key:'q-13',q:'What does ping ::1 test?',opts:["Your own device's IPv6 setup (loopback)",'Your default gateway','All devices on the link','The internet'],ans:0,why:'::1 is the loopback address.'},
+  {key:'q-14',q:'Which type of address does IPv6 NOT have?',opts:['Broadcast','Unicast','Multicast','Anycast'],ans:0,why:'IPv6 replaced broadcast with multicast.'},
+  {key:'q-15',q:'Which command sets a link-local address by hand on a router interface?',opts:['ipv6 address fe80::1:1 link-local','ipv6 link-local fe80::1:1','ipv6 address fe80::1:1/64','ip address fe80::1:1'],ans:0,mono:true,why:'Add the keyword link-local after the address.'}
+ ]
+};
+$$('.mcs').forEach(h=>{(MC[h.dataset.set]||[]).forEach(spec=>mcq(h,spec));});
+
+/* =============== 1: objectives + word bank =============== */
+(function(){
+  const OBJ=[['Why do we need IPv6?','s2'],['How do I write an IPv6 address?','s4'],['What kinds of IPv6 addresses are there?','s7'],['How do I set a global and a link-local address by hand?','s11'],['How do devices get a global address automatically?','s12'],['How do devices get a link-local address automatically?','s15'],['How do I spot and check IPv6 addresses?','s9'],['How do I split a network into IPv6 subnets?','s17']];
+  const ol=$('#objList');
+  OBJ.forEach((o,i)=>{const li=document.createElement('li');li.innerHTML=`<button type="button" class="btn" data-jump="${o[1]}"><span class="n">${i+1}</span><span>${esc(o[0])}</span></button>`;ol.appendChild(li);});
+  const T=[
+   ['dual stack','Running IPv4 and IPv6 side by side on the same device or network.'],
+   ['tunneling','Carrying an IPv6 packet inside an IPv4 packet so it can cross an IPv4-only network.'],
+   ['NAT64','A translator that lets IPv6-only devices talk to IPv4-only devices.'],
+   ['preferred format','Writing out all 32 hex digits of an IPv6 address, with every hextet in full.'],
+   ['hextet','One 16-bit chunk (4 hex digits) of an IPv6 address. Not an official word, but the course uses it.'],
+   ['GUA','Global unicast address. The public, internet-routable address (starts with 2 or 3).'],
+   ['LLA','Link-local address. Starts with fe80. Works on the local link only. Every IPv6 interface needs one.'],
+   ['global routing prefix','The front part of a GUA that your ISP gives you (often 48 bits).'],
+   ['subnet ID','The part of a GUA you control to make subnets (often 16 bits).'],
+   ['interface ID','The device part of an address (usually the last 64 bits).'],
+   ['RS','Router Solicitation. A host asking "any routers here?"'],
+   ['RA','Router Advertisement. A router announcing network info (prefix, gateway, DNS).'],
+   ['SLAAC','Stateless address autoconfiguration. The device builds its own GUA from the RA prefix plus its own interface ID.'],
+   ['stateless DHCPv6','A server that hands out extras (like DNS) but does not give out addresses.'],
+   ['stateful DHCPv6','A server that hands out addresses and keeps track of them, like IPv4 DHCP.'],
+   ['EUI-64','A way to build an interface ID from a MAC address: insert fffe and flip the 7th bit.'],
+   ['well-known multicast','Reserved group addresses like ff02::1 (all nodes) and ff02::2 (all routers).'],
+   ['solicited-node multicast','A special multicast address built from a unicast address so only the likely target pays attention.']
+  ];
+  const g=$('#termGrid');
+  T.forEach(t=>{
+    const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=t[0];b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',()=>{$$('#termGrid button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');$('#termDef').innerHTML=`<strong>${esc(t[0])}:</strong> ${esc(t[1])}`;});
+    g.appendChild(b);
+  });
+})();
+
+/* =============== 2: things grid =============== */
+(function(){
+  const TH=[['📱','Phone'],['💻','Laptop'],['🎮','Game console'],['📺','Smart TV'],['⌚','Smart watch'],['🚗','Car'],['🧊','Fridge'],['🔔','Video doorbell'],['🌡️','Thermostat'],['💡','Smart bulbs'],['📷','Camera'],['🔊','Smart speaker']];
+  const g=$('#thingGrid');let n=0;
+  TH.forEach(t=>{
+    const b=document.createElement('button');b.type='button';b.className='btn thing';b.setAttribute('aria-pressed','false');
+    b.innerHTML=`<span class="em" aria-hidden="true">${t[0]}</span><span>${t[1]}</span>`;
+    b.addEventListener('click',()=>{
+      const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on?'true':'false');n+=on?1:-1;
+      $('#thingMsg').textContent=n===0?'':`You picked ${n}. Each one needs its own address to work on the internet. Multiply that by billions of people and you see why IPv4 ran out.`;
+      $('#thingMsg').className='fb ok';
+      if(n>=3)Score.complete('mc-things',true);
+    });
+    g.appendChild(b);
+  });
+})();
+
+/* =============== 4: meet the address =============== */
+(function(){
+  const g=['2001','0db8','0000','0000','0000','ff00','0042','8329'];
+  const box=$('#groups');let upper=false;
+  function paint(){$$('#groups .gbtn').forEach((b,i)=>{b.textContent=upper?g[i].toUpperCase():g[i];});}
+  g.forEach((v,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='gbtn'+(v==='0000'?' zero':'');b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',()=>{
+      $$('#groups .gbtn').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');
+      const bin=parseInt(v,16).toString(2).padStart(16,'0').match(/.{4}/g).join(' ');
+      $('#binOut').textContent=`${v}  =  ${bin}  (16 bits)`;
+    });
+    const w=document.createElement('span');w.className='gw';w.appendChild(b);
+    if(i<7){const c=document.createElement('span');c.className='co';c.textContent=':';c.setAttribute('aria-hidden','true');w.appendChild(c);}
+    box.appendChild(w);
+  });
+  paint();
+  $('#caseBtn').addEventListener('click',e=>{upper=!upper;paint();e.currentTarget.textContent=upper?'Switch to lowercase':'Switch to UPPERCASE';});
+  const hg=$('#hexGrid');
+  for(let i=0;i<16;i++){
+    const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=i.toString(16);b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',()=>{$$('#hexGrid button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');$('#hexOut').textContent=`${i.toString(16)}  =  ${i} in decimal  =  ${i.toString(2).padStart(4,'0')} in binary`;});
+    hg.appendChild(b);
+  }
+})();
+
+/* =============== 5: shrink stepper + valid-or-not game =============== */
+(function(){
+  const EX=['2001:0db8:0000:1111:0000:0000:0000:0200','2001:0db8:0000:0000:ab00:0000:0000:0000','2001:0db8:aaaa:0001:0000:0000:0000:0000','fe80:0000:0000:0000:0123:4567:89ab:cdef','2001:0db8:0000:0000:abcd:0000:0000:0001','0000:0000:0000:0000:0000:0000:0000:0001'];
+  const s=$('#exSel');
+  EX.forEach((e,i)=>{const o=document.createElement('option');o.value=i;o.textContent=e;s.appendChild(o);});
+  let stage=0;
+  function render(){
+    const full=EX[+s.value],groups=expand(full),stripped=stripZeros(groups);
+    let h=`<div class="ln"><span class="lab">Start:</span><span>${full}</span></div>`;
+    if(stage>=1)h+=`<div class="ln"><span class="lab">Rule 1:</span><span>${stripped.map((x,i)=>x===groups[i]?x:`<mark>${x}</mark>`).join(':')}</span></div>`;
+    if(stage>=2)h+=`<div class="ln"><span class="lab">Rule 2:</span><span>${esc(compress(groups)).replace('::','<mark class="pk">::</mark>')}</span></div>`;
+    $('#shrinkBox').innerHTML=h;
+    $('#r1').disabled=stage!==0;$('#r2').disabled=stage!==1;
+    let note='';
+    if(stage===2){
+      const runs=zeroRuns(groups).sort((a,b)=>b-a);
+      if(runs.length>1)note=runs[0]===runs[1]?'Two zero runs of the same length. The FIRST one gets the ::.':'Two zero runs. The LONGEST one gets the ::, and the shorter run stays as plain 0s.';
+      else note='Done. That is the shortest form.';
+    }
+    $('#shrinkNote').textContent=note;
+  }
+  $('#r1').addEventListener('click',()=>{stage=1;render();});
+  $('#r2').addEventListener('click',()=>{stage=2;render();});
+  $('#rReset').addEventListener('click',()=>{stage=0;render();});
+  s.addEventListener('change',()=>{stage=0;render();});
+  render();
+
+  const VB=[
+   ['2001:0db8:0000:0000:ab00:0000:0000:0000','2001:db8::ab00::','The :: was used twice, so nobody can tell how many zeros each one hides.'],
+   ['2001:0db8:0000:0000:ab00:0000:0000:0000','2001:db8:0:0:ab00::','The longest run (three hextets at the end) got the ::.'],
+   ['2001:0db8:0000:0000:ab00:0000:0000:0000','2001:db8::ab00:0:0:0','Same address, but the SHORTER zero run was squashed. The longest run should get the ::.'],
+   ['2001:0db8:0000:00a3:ab00:0ab0:00ab:1234','2001:db8:0:a3:ab:ab0:ab:1234','Someone dropped the trailing zeros from ab00. Only LEADING zeros can go.'],
+   ['fe80:0000:0000:0000:0123:4567:89ab:cdef','fe80::123:4567:89ab:cdef','Leading zeros dropped, and the single run of zeros became ::.'],
+   ['2001:0db8:0000:0000:abcd:0000:0000:0001','2001:db8::abcd:0:0:1','Two equal runs. The first run gets the ::.'],
+   ['2001:0db8:0000:0000:abcd:0000:0000:0001','2001:db8:0:0:abcd::1','Two equal runs. This squashed the second, but the best practice is the first.']
+  ];
+  const LAB={correct:'Correct and shortest',notbest:'Valid, but not the best form',wrong:'That is a different address',broken:'Broken (not a valid address)'};
+  const host=$('#vbGame');
+  VB.forEach((v,idx)=>{
+    const d=document.createElement('div');d.className='card';
+    const truth=verdict(v[0],v[1]);
+    d.innerHTML=`<p style="margin:0 0 .3rem">Full: <code style="word-break:break-all">${v[0]}</code></p><p style="margin:0 0 .5rem">Shortened: <code style="font-weight:800;word-break:break-all">${v[1]}</code></p><div class="choices"></div><p class="fb" role="status" aria-live="polite"></p>`;
+    const box=d.querySelector('.choices'),fb=d.querySelector('.fb');let wrong=0,done=false;
+    Object.keys(LAB).forEach(k=>{
+      const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=LAB[k];
+      b.addEventListener('click',()=>{
+        if(done)return;
+        if(k===truth){done=true;b.classList.add('ok');[...box.children].forEach(x=>{if(x!==b)x.disabled=true;});fb.textContent='✓ '+v[2];fb.className='fb ok';Score.complete('mc-vb'+idx,wrong===0);}
+        else{wrong++;b.classList.add('bad');b.disabled=true;fb.textContent='✗ Not quite. Try again.';fb.className='fb bad';}
+      });
+      box.appendChild(b);
+    });
+    host.appendChild(d);
+  });
+  if(IT)window.__verdicts=VB.map(v=>verdict(v[0],v[1]));
+})();
+
+/* =============== 6: practice =============== */
+(function(){
+  const SH=[['A','2001:0db8:0000:1111:0000:0000:0000:0200'],['B','2001:0db8:aaaa:0001:0000:0000:0000:0000'],['C','fe80:0000:0000:0000:0123:4567:89ab:cdef'],['D','2001:0db8:0000:ab00:0000:0000:0000:1234']];
+  const EXP=[['1','2001:db8:acad::1'],['2','fe80::1:1'],['3','::1'],['4','2001:db8:0:1111::200']];
+  let mode='s',extra=0;
+  const box=$('#pBox');
+  function add(label,full,key,kind){
+    const g=expand(full),target=compress(g);
+    const d=document.createElement('div');d.className='prob';
+    const shown=kind==='s'?full:compress(g);
+    d.innerHTML=`<div class="plabel">${label}</div><div class="pbody"><code class="full">${shown}</code><div class="row"><input type="text" aria-label="Your answer for ${label}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${kind==='s'?'Type the shortest form':'Type all 8 hextets, 4 digits each'}"><button type="button" class="btn primary chk">Check</button><button type="button" class="btn ghost shw">Show answer</button></div><div class="fb" role="status" aria-live="polite"></div></div>`;
+    box.appendChild(d);
+    const inp=d.querySelector('input'),fb=d.querySelector('.fb'),chk=d.querySelector('.chk'),shw=d.querySelector('.shw');
+    let tries=0,revealed=false,done=false;
+    const ans=kind==='s'?target:g.join(':');
+    function finish(){done=true;chk.disabled=true;shw.disabled=true;inp.readOnly=true;}
+    function check(){
+      if(done)return;
+      const v=inp.value.trim().toLowerCase();
+      if(!v){fb.textContent='Type an answer first.';fb.className='fb bad';return;}
+      tries++;
+      let msg,ok=false;
+      if(kind==='s'){
+        const ex=expand(v);
+        const lenient=zeroRuns(g).every(r=>r===1)?stripZeros(g).join(':'):null;
+        if(!ex)msg='That does not look like a valid IPv6 address. Check the colons, and remember :: only once.';
+        else if(ex.join(':')!==g.join(':'))msg='That is a different address. Did you drop a trailing zero or lose a hextet?';
+        else if(v===target||v===lenient){ok=true;msg='✓ Correct!';}
+        else msg='Right address, but not shortened the best way yet. Drop the leading zeros, then use :: once on the longest run of zero hextets (the first run if tied).';
+      }else{
+        if(!/^([0-9a-f]{4}:){7}[0-9a-f]{4}$/.test(v)){msg='Write all 8 hextets with 4 digits each, separated by single colons (no ::).';}
+        else if(v===ans){ok=true;msg='✓ Correct!';}
+        else msg='That is the full format, but it is a different address. Where does the :: go back in?';
+      }
+      fb.textContent=msg;fb.className='fb '+(ok?'ok':'bad');
+      inp.classList.toggle('ok',ok);inp.classList.toggle('bad',!ok);
+      if(ok){finish();Score.complete(key,tries===1&&!revealed);}
+    }
+    chk.addEventListener('click',check);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+    shw.addEventListener('click',()=>{if(done)return;revealed=true;inp.value=ans;inp.classList.remove('bad');fb.textContent='Answer shown: '+ans;fb.className='fb ok';finish();Score.complete(key,false);});
+  }
+  function load(){
+    box.innerHTML='';extra=0;$('#pMore').disabled=false;
+    $('#pHelp').textContent=mode==='s'?'Write the shortest form of each address. Hint: drop leading zeros first, then squash the longest run of all-zero hextets.':'Each address is shortened. Write it out in full: 8 hextets, 4 digits each.';
+    (mode==='s'?SH:EXP).forEach(([l,f])=>add(l,mode==='s'?f:expand(f).join(':'),'pr-'+mode+'-'+l,mode));
+  }
+  setTabs([$('#pTabS'),$('#pTabE')],[null,null],i=>{mode=i===0?'s':'e';load();});
+  $('#pMore').addEventListener('click',()=>{
+    if(extra>=6)return;extra++;
+    add(mode==='s'?String.fromCharCode(68+extra):String(4+extra),randomAddress(),'pr-'+mode+'-r'+extra,mode);
+    if(extra>=6)$('#pMore').disabled=true;
+    box.lastElementChild.scrollIntoView({block:'center'});
+  });
+  load();
+})();
+
+/* =============== 8: prefix length =============== */
+(function(){
+  const FULL=['2001','0db8','acad','0001','0000','0000','0000','0001'];
+  const r=$('#plen'),hexBox=$('#pHex'),bitBox=$('#pBits');
+  FULL.forEach(v=>{const d=document.createElement('div');d.className='hx';d.textContent=v;hexBox.appendChild(d);});
+  for(let i=0;i<128;i++)bitBox.appendChild(document.createElement('i'));
+  function upd(){
+    const n=+r.value;
+    $('#plenOut').textContent='/'+n;
+    [...hexBox.children].forEach((d,i)=>{const nb=Math.max(0,Math.min(16,n-16*i));d.className='hx '+(nb===16?'net':nb===0?'host':'mix');});
+    [...bitBox.children].forEach((b,i)=>{b.className=i<n?'n':'';});
+    const hostBits=128-n;
+    let extra='';
+    if(n===64)extra=' This is the standard for LANs, because SLAAC builds a 64-bit interface ID.';
+    else if(n===48)extra=' A /48 is a common size for an ISP to give a site.';
+    else if(n===128)extra=' A /128 names exactly one address.';
+    $('#pMsg').textContent=`/${n}: the first ${n} bits name the network. The last ${hostBits} bits name the device, so there are ${hostBits<=10?(1n<<BigInt(hostBits)).toString():bigName(1n<<BigInt(hostBits))} possible interface IDs.${extra}`;
+  }
+  r.addEventListener('input',upd);
+  $$('[data-p]').forEach(b=>b.addEventListener('click',()=>{r.value=b.dataset.p;upd();}));
+  upd();
+
+  let cur=null;
+  const h=()=>(1+rnd(0xfff)).toString(16);
+  function newQ(){
+    const len=Math.random()<0.65?64:48;
+    const g=['2001','0db8',h().padStart(4,'0'),h().padStart(4,'0'),h().padStart(4,'0'),'0000','0000',(1+rnd(255)).toString(16).padStart(4,'0')];
+    const net=networkOf(g,len);
+    cur={len,addr:compress(g)+'/'+len,net:net,ans:compress(net)+'/'+len};
+    $('#npAddr').textContent=cur.addr;$('#npIn').value='';$('#npFb').textContent='';$('#npIn').classList.remove('ok','bad');
+    $('#npCheck').disabled=false;$('#npShow').disabled=false;cur.tries=0;cur.done=false;cur.shown=false;
+  }
+  function check(){
+    if(cur.done)return;
+    const v=$('#npIn').value.trim().toLowerCase();
+    if(!v){$('#npFb').textContent='Type your answer first.';$('#npFb').className='fb bad';return;}
+    cur.tries++;
+    const m=v.match(/^([0-9a-f:]+)\/(\d{1,3})$/);
+    let ok=false,msg;
+    if(!m)msg='Write it like 2001:db8:1::/64, with the slash and prefix length.';
+    else if(+m[2]!==cur.len)msg=`The prefix length should be /${cur.len} (it's in the question).`;
+    else{const ex=expand(m[1]);if(!ex)msg='That is not a valid IPv6 address.';else if(ex.join(':')===cur.net.join(':')){ok=true;msg='✓ Correct!';}else msg='Not quite. Keep only the network bits and turn everything after them into zeros.';}
+    $('#npFb').textContent=msg;$('#npFb').className='fb '+(ok?'ok':'bad');$('#npIn').classList.toggle('ok',ok);$('#npIn').classList.toggle('bad',!ok);
+    if(ok){cur.done=true;Score.complete('pr-net'+(++netN),cur.tries===1&&!cur.shown);}
+  }
+  let netN=0;
+  $('#npCheck').addEventListener('click',check);
+  $('#npIn').addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+  $('#npShow').addEventListener('click',()=>{if(cur.done)return;cur.shown=true;cur.done=true;$('#npIn').value=cur.ans;$('#npFb').textContent='Answer shown: '+cur.ans;$('#npFb').className='fb ok';Score.complete('pr-net'+(++netN),false);});
+  $('#npNew').addEventListener('click',newQ);
+  newQ();
+  if(IT)window.__np=()=>cur;
+})();
+
+/* =============== 9: address detective =============== */
+(function(){
+  const INFO={
+    gua:['Global unicast (GUA)','The first hextet starts with 2 or 3, which is inside 2000::/3. It is routable on the IPv6 internet, like a public IPv4 address.'],
+    lla:['Link-local (LLA)','The first hextet is between fe80 and febf (fe80::/10). It only works on the local link, and routers never forward it. Every IPv6 interface needs one.'],
+    ula:['Unique local','The first hextet is between fc00 and fdff (fc00::/7). It is meant for inside a site and is not routed on the internet.'],
+    multi:['Multicast','It starts with ff (ff00::/8). One packet goes to a group, and a multicast address is only ever a destination.'],
+    loop:['Loopback (::1)','It points back to your own device. ping ::1 tests your own IPv6 setup.'],
+    unspec:['Unspecified (::)','All zeros means "no address yet".'],
+    other:['Something else','It is not in one of the ranges this module focuses on.']
+  };
+  const SAMPLES=['2001:db8:acad:1::1','fe80::1:1','fd12:3456:789a:1::10','ff02::1','::1','::'];
+  function inv(){
+    let v=$('#adIn').value.trim().replace(/\/\d+$/,'');
+    const out=$('#adOut');
+    if(!v){out.textContent='Type an address first.';return;}
+    const g=expand(v);
+    if(!g){out.textContent='That does not look like a valid IPv6 address. Check the colons, the hex digits, and that :: appears only once.';return;}
+    const t=classify(g),info=INFO[t];
+    let extra=g[0]==='2001'&&g[1]==='0db8'?' Heads up: 2001:db8::/32 is reserved for documentation, so you will see it in examples.':'';
+    out.innerHTML=`<strong>${esc(info[0])}</strong><br>${esc(info[1])}${extra}<br><span class="note">Full form: <code>${g.join(':')}</code></span>`;
+    Score.complete('pr-det-'+t,true);
+  }
+  $('#adGo').addEventListener('click',inv);
+  $('#adIn').addEventListener('keydown',e=>{if(e.key==='Enter')inv();});
+  SAMPLES.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='btn';b.style.fontFamily='var(--mono)';b.textContent=s;b.addEventListener('click',()=>{$('#adIn').value=s;inv();});$('#adSamples').appendChild(b);});
+})();
+
+/* =============== 10: GUA anatomy =============== */
+(function(){
+  const G=['2001','db8','acad','1','fe99','47ff','fe75','cee0'];
+  const QS=[['Tap the SUBNET ID.',3,'The 4th hextet (1) is the subnet ID: the part you choose.'],['Tap the LAST hextet of the global routing prefix (the /48).',2,'The first three hextets (2001:db8:acad) are the /48 from the ISP.'],['Tap the FIRST hextet of the interface ID.',4,'The last four hextets (64 bits) are the interface ID.']];
+  const box=$('#gHex');let qi=0,wrong=0;
+  G.forEach((v,i)=>{const b=document.createElement('button');b.type='button';b.className='hx';b.textContent=v;b.dataset.i=i;b.addEventListener('click',()=>pick(i));box.appendChild(b);});
+  function paint(){$$('#gHex .hx').forEach((b,i)=>{b.className='hx '+(i<3?'net':i===3?'sub':'host');});}
+  function show(){if(qi>=QS.length){$('#gQ').textContent='All done! Each color is one part of the address.';paint();return;}$('#gQ').textContent=QS[qi][0];}
+  function pick(i){
+    if(qi>=QS.length)return;
+    const fb=$('#gFb');
+    if(i===QS[qi][1]){fb.textContent='✓ '+QS[qi][2];fb.className='fb ok';Score.complete('mc-gq'+qi,wrong===0);qi++;wrong=0;show();}
+    else{wrong++;fb.textContent='✗ Not that one. Try again.';fb.className='fb bad';}
+  }
+  show();
+  const r=$('#isp');
+  function upd(){
+    const p=+r.value;$('#ispOut').textContent='/'+p;
+    const subs=1n<<BigInt(64-p);
+    $('#ispMsg').textContent=`${64-p} bits left for the subnet ID gives ${commas(subs.toString())} possible /64 subnets (${bigName(subs)}). Each /64 has 2^64 interface IDs: about 18 quintillion devices.`;
+  }
+  r.addEventListener('input',upd);upd();
+})();
+
+/* =============== 11: router simulator + windows form =============== */
+(function(){
+  setTabs([$('#cTabR'),$('#cTabW')],[$('#cRouter'),$('#cWin')]);
+  const IFS=[['GigabitEthernet0/0/0','7079.b392.3640'],['GigabitEthernet0/0/1','7079.b392.3641'],['Serial0/1/0',null],['Serial0/1/1',null]];
+  let st;
+  function fresh(){st={mode:'priv',cur:null,routing:false,ifs:{},ranBrief:false,ranRoute:false,hist:[],hi:0};IFS.forEach(([n,m])=>st.ifs[n]={mac:m,up:false,gua:[],lla:null});}
+  const up=s=>s.toUpperCase();
+  function lla(n){
+    const f=st.ifs[n];if(f.lla)return f.lla;
+    if(!f.gua.length)return null;
+    const mac=f.mac||st.ifs[IFS[0][0]].mac;
+    const e=eui64(parseMac(mac.replace(/\./g,'')));
+    return compress(['fe80','0000','0000','0000',...idGroupsOf(e)]);
+  }
+  function resolveIf(tokens){
+    const s=tokens.join('').toLowerCase();
+    let m=s.match(/^(g|gi|gig|giga|gigabit|gigabitethernet)(\d+\/\d+\/\d+)$/);if(m&&st.ifs['GigabitEthernet'+m[2]])return 'GigabitEthernet'+m[2];
+    m=s.match(/^(s|se|ser|serial)(\d+\/\d+\/\d+)$/);if(m&&st.ifs['Serial'+m[2]])return 'Serial'+m[2];
+    return null;
+  }
+  const kw=(t,full,min=1)=>t!==undefined&&t.length>=min&&full.startsWith(t);
+  const touch=()=>{st.ranBrief=false;st.ranRoute=false;};
+  const prompt=()=>'R1'+(st.mode==='priv'?'#':st.mode==='config'?'(config)#':'(config-if)#');
+  function brief(){
+    let o='';
+    IFS.forEach(([n])=>{
+      const f=st.ifs[n],l=lla(n);
+      o+=n.padEnd(23)+'['+(f.up?'up/up':'administratively down/down')+']\n';
+      const lines=[];if(l)lines.push(up(l));f.gua.forEach(a=>lines.push(up(compress(expand(a.addr)))));
+      if(!lines.length)lines.push('unassigned');
+      lines.forEach(x=>{o+='    '+x+'\n';});
+    });
+    return o.trimEnd();
+  }
+  function route(){
+    if(!st.routing)return '% IPv6 routing not enabled';
+    const ents=[];
+    IFS.forEach(([n])=>{const f=st.ifs[n];if(!f.up)return;f.gua.forEach(a=>{
+      const net=networkOf(expand(a.addr),a.len);
+      ents.push(['C',up(compress(net))+'/'+a.len,n,'directly connected']);
+      ents.push(['L',up(compress(expand(a.addr)))+'/128',n,'receive']);});});
+    ents.push(['L','FF00::/8','Null0','receive']);
+    let o=`IPv6 Routing Table - default - ${ents.length} entries\nCodes: C - Connected, L - Local, S - Static, U - Per-user Static route\n`;
+    ents.forEach(e=>{o+=`${e[0]}   ${e[1]} [0/0]\n     via ${e[2]}, ${e[3]}\n`;});
+    return o.trimEnd();
+  }
+  function exec(line){
+    const t=line.trim().toLowerCase().split(/\s+/);
+    const BAD="% Invalid input detected at '^' marker.";
+    if(t[0]==='do'&&st.mode!=='priv'){t.shift();return execPriv(t,BAD);}
+    if(kw(t[0],'exit',2)&&t.length===1){if(st.mode==='if'){st.mode='config';st.cur=null;}else if(st.mode==='config')st.mode='priv';return '';}
+    if(t[0]==='end'&&t.length===1){if(st.mode!=='priv'){st.mode='priv';st.cur=null;}return '';}
+    if(st.mode==='priv')return execPriv(t,BAD);
+    if(st.mode==='config'){
+      if(kw(t[0],'interface',1)&&t.length>=2){const n=resolveIf(t.slice(1));if(!n)return BAD;st.mode='if';st.cur=n;return '';}
+      if(t[0]==='ipv6'&&kw(t[1],'unicast-routing',2)&&t.length===2){st.routing=true;touch();return '';}
+      return BAD;
+    }
+    // interface mode
+    const f=st.ifs[st.cur];
+    if(kw(t[0],'interface',1)&&t.length>=2){const n=resolveIf(t.slice(1));if(!n)return BAD;st.cur=n;return '';}
+    if(t[0]==='no'&&kw(t[1],'shutdown',2)&&t.length===2){f.up=true;touch();return '';}
+    if(kw(t[0],'shutdown',2)&&t.length===1){f.up=false;touch();return '';}
+    if(t[0]==='ipv6'&&kw(t[1],'address',2)){
+      const a=t[2];
+      if(!a)return '% Incomplete command.';
+      if(t.length===3&&a.includes('/')){
+        const [ad,ln]=a.split('/');const ex=expand(ad);const L=+ln;
+        if(!ex||!/^\d{1,3}$/.test(ln)||L>128)return BAD;
+        if(!f.gua.some(x=>x.addr===ex.join(':')&&x.len===L))f.gua.push({addr:ex.join(':'),len:L});
+        touch();return '';
+      }
+      if(t.length===4&&kw(t[3],'link-local',1)&&!a.includes('/')){
+        const ex=expand(a);if(!ex)return BAD;
+        const f0=parseInt(ex[0],16);if(f0<0xfe80||f0>0xfebf)return '% Invalid link-local address';
+        f.lla=compress(ex);touch();return '';
+      }
+      if(t.length===3)return '% Incomplete command.';
+      return BAD;
+    }
+    return BAD;
+  }
+  function execPriv(t,BAD){
+    if(kw(t[0],'configure',4)&&kw(t[1],'terminal',1)&&t.length===2){st.mode='config';return 'Enter configuration commands, one per line.  End with CNTL/Z.';}
+    if(kw(t[0],'show',2)&&kw(t[1],'ipv6',2)&&kw(t[2],'interface',1)&&kw(t[3],'brief',1)&&t.length===4){st.ranBrief=true;return brief();}
+    if(kw(t[0],'show',2)&&kw(t[1],'ipv6',2)&&kw(t[2],'route',2)&&t.length===3){const o=route();if(st.routing)st.ranRoute=true;return o;}
+    if(kw(t[0],'enable',2))return '';
+    return BAD;
+  }
+  const TASKS=[
+    ['Turn on GigabitEthernet0/0/0 with the address 2001:db8:acad:1::1/64',()=>{const f=st.ifs['GigabitEthernet0/0/0'];return f.up&&f.gua.some(x=>x.addr==='2001:0db8:acad:0001:0000:0000:0000:0001'&&x.len===64);},'configure terminal → interface g0/0/0 → ipv6 address 2001:db8:acad:1::1/64 → no shutdown'],
+    ['Turn on GigabitEthernet0/0/1 with the address 2001:db8:acad:2::1/64',()=>{const f=st.ifs['GigabitEthernet0/0/1'];return f.up&&f.gua.some(x=>x.addr==='2001:0db8:acad:0002:0000:0000:0000:0001'&&x.len===64);},'exit → interface g0/0/1 → ipv6 address 2001:db8:acad:2::1/64 → no shutdown'],
+    ['Give GigabitEthernet0/0/0 the link-local address fe80::1:1',()=>st.ifs['GigabitEthernet0/0/0'].lla==='fe80::1:1','interface g0/0/0 → ipv6 address fe80::1:1 link-local (no prefix length!)'],
+    ['Turn on IPv6 routing so R1 can send RA messages',()=>st.routing,'In config mode (R1(config)#): ipv6 unicast-routing'],
+    ['Check your work with show ipv6 interface brief (from # mode, or use "do show...")',()=>st.ranBrief&&TASKS[0][1]()&&TASKS[1][1]()&&TASKS[2][1](),'end → show ipv6 interface brief'],
+    ['Bonus: look at the routing table with show ipv6 route',()=>st.ranRoute,'end → show ipv6 route (needs ipv6 unicast-routing first)']
+  ];
+  let tasksDone=[];
+  function paintTasks(){
+    const ul=$('#simTasks');ul.innerHTML='';
+    TASKS.forEach((t,i)=>{const ok=t[1]();const li=document.createElement('li');li.className=ok?'done':'';li.innerHTML=`<span class="bx" aria-hidden="true">${ok?'✓':'○'}</span><span><span class="sr">${ok?'Done: ':'To do: '}</span>${esc(t[0])}</span>`;ul.appendChild(li);});
+    if(TASKS.slice(0,5).every(t=>t[1]()))Score.complete('sim',simHints===0);
+  }
+  let simHints=0;
+  function out(text,err){const pre=$('#termOut');const s=document.createElement('span');if(err)s.className='err';s.textContent=text+'\n';pre.appendChild(s);pre.scrollTop=pre.scrollHeight;}
+  function submit(){
+    const inp=$('#cmd'),line=inp.value;
+    if(!line.trim()){return;}
+    $('#termOut').appendChild(document.createTextNode(prompt()+' '+line+'\n'));
+    st.hist.push(line);st.hi=st.hist.length;
+    const r=exec(line);
+    if(r)out(r,r.startsWith('%'));
+    inp.value='';$('#prompt').textContent=prompt();paintTasks();
+  }
+  function reset(){
+    fresh();$('#termOut').textContent='';simHints=0;$('#simFb').textContent='';$('#prompt').textContent=prompt();paintTasks();
+    out('R1 practice simulator. You are in privileged mode. Type a command and press Enter.');
+  }
+  $('#cmd').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();submit();}
+    else if(e.key==='ArrowUp'&&st.hist.length){e.preventDefault();st.hi=Math.max(0,st.hi-1);$('#cmd').value=st.hist[st.hi]||'';}
+    else if(e.key==='ArrowDown'&&st.hist.length){e.preventDefault();st.hi=Math.min(st.hist.length,st.hi+1);$('#cmd').value=st.hist[st.hi]||'';}
+  });
+  $('#simReset').addEventListener('click',reset);
+  $('#simHint').addEventListener('click',()=>{
+    const i=TASKS.findIndex(t=>!t[1]());
+    simHints++;
+    $('#simFb').textContent=i<0?'Everything is done. Nice work!':'Try this: '+TASKS[i][2];$('#simFb').className='fb';
+  });
+  fresh();reset();
+  if(IT)window.__sim={submit:(l)=>{$('#cmd').value=l;submit();},state:()=>st};
+
+  /* Windows form */
+  $('#winCheck').addEventListener('click',()=>{
+    const a=expand($('#winAddr').value),len=$('#winLen').value.trim(),gw=expand($('#winGw').value);
+    const fb=$('#winFb');let ok=false,msg;
+    const net='2001:0db8:acad:0001';
+    if(!a)msg='The IPv6 address is not valid. Try something like 2001:db8:acad:1::10.';
+    else if(a.slice(0,4).join(':')!==net)msg='That address is not on R1\'s network. The first four hextets must be 2001:db8:acad:1.';
+    else if(a.join(':')==='2001:0db8:acad:0001:0000:0000:0000:0001')msg='That is R1\'s own address. Pick a different one for PC1.';
+    else if(len!=='64')msg='The prefix length for this LAN should be 64.';
+    else if(!gw)msg='Enter a valid default gateway. Use one of R1\'s addresses.';
+    else if(gw.join(':')==='fe80:0000:0000:0000:0000:0000:0001:0001'){ok=true;msg="✓ Perfect. Using the router's link-local address as the gateway is best practice.";}
+    else if(gw.join(':')==='2001:0db8:acad:0001:0000:0000:0000:0001'){ok=true;msg="✓ That works, because it is R1's GUA. Best practice is R1's link-local address (fe80::1:1), though.";}
+    else msg='The default gateway has to be one of R1\'s addresses on this LAN: 2001:db8:acad:1::1 or fe80::1:1.';
+    fb.textContent=msg;fb.className='fb '+(ok?'ok':'bad');
+    if(ok)Score.complete('pr-win',gw.join(':').startsWith('fe80'));
+  });
+})();
+
+/* =============== 12: RS / RA story =============== */
+(function(){
+  const M=[
+    ['pill','PC1 just plugged in. It already made a link-local address (fe80...), but it has no global address yet.'],
+    ['bub v4','<strong>PC1 sends an RS</strong> to ff02::2 (all routers): "Is there a router here? Tell me about this network!"'],
+    ['bub v6','<strong>R1 answers with an RA</strong> to ff02::1 (all nodes): "Prefix: 2001:db8:acad:1::/64. I\'m your default gateway (my link-local address). DNS info is here too."'],
+    ['pill','R1 would have sent that RA anyway: routers repeat it about every 200 seconds.'],
+    ['bub v4','<strong>PC1:</strong> "Thanks! The RA is a suggestion, so my operating system decides how to build my address."']
+  ];
+  let n=0;const chat=$('#raChat');
+  function render(){
+    chat.innerHTML='';
+    M.slice(0,n).forEach(m=>{const d=document.createElement('div');d.className=m[0];d.innerHTML=m[1];chat.appendChild(d);});
+    if(n===0)chat.innerHTML='<div class="pill">Press "Next message" to watch PC1 get its network info</div>';
+    $('#raNext').disabled=n>=M.length;
+  }
+  $('#raNext').addEventListener('click',()=>{if(n<M.length){n++;render();if(n===M.length)Score.complete('mc-ra-story',true);}});
+  $('#raReset').addEventListener('click',()=>{n=0;render();});
+  render();
+})();
+
+/* =============== 13: methods matrix =============== */
+(function(){
+  const OPT=['Choose...','RA message','Device builds it (SLAAC)','DHCPv6 server'];
+  const ROWS=['Default gateway','Your global address (GUA)','DNS server'];
+  const COLS=['Method 1: SLAAC','Method 2: SLAAC + stateless DHCPv6','Method 3: Stateful DHCPv6'];
+  const ANS=[[1,2,1],[1,2,3],[1,3,3]]; // [method][row]; 1=RA, 2=device builds it, 3=DHCPv6 server
+  const t=$('#mx');
+  let h='<tr><th></th>'+COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  ROWS.forEach((r,ri)=>{h+=`<tr><td class="rowhead">${r}</td>`+COLS.map((c,ci)=>`<td><select data-m="${ci}" data-r="${ri}" aria-label="${r}, ${c}">${OPT.map((o,k)=>`<option value="${k}">${o}</option>`).join('')}</select></td>`).join('')+'</tr>';});
+  t.innerHTML=h;
+  let tries=0,done=false;
+  function check(reveal){
+    let right=0;
+    $$('#mx select').forEach(s=>{
+      const exp=ANS[+s.dataset.m][+s.dataset.r];
+      if(reveal)s.value=exp;
+      const ok=+s.value===exp;s.classList.toggle('ok',ok);s.classList.toggle('bad',!ok&&+s.value!==0);if(ok)right++;
+    });
+    return right;
+  }
+  $('#mxCheck').addEventListener('click',()=>{
+    if(done)return;tries++;
+    const r=check(false);
+    if(r===9){done=true;$('#mxFb').textContent='✓ All 9 are right!';$('#mxFb').className='fb ok';Score.complete('mc-mx',tries===1);}
+    else{$('#mxFb').textContent=`${r} of 9 correct. Fix the red ones. Remember: the gateway always comes from the RA.`;$('#mxFb').className='fb bad';}
+  });
+  $('#mxShow').addEventListener('click',()=>{check(true);if(!done){done=true;Score.complete('mc-mx',false);}$('#mxFb').textContent='Here are the answers. Study the pattern, then try the questions below.';$('#mxFb').className='fb ok';});
+})();
+
+/* =============== 14: EUI-64 builder + spot game =============== */
+(function(){
+  const PREFIX=['2001','0db8','acad','0001'];
+  function render(){
+    const b=parseMac($('#mac').value);const out=$('#euiOut'),err=$('#macErr');
+    if(!b){out.innerHTML='';err.textContent='Enter a MAC like fc99.4775.cee0 or fc:99:47:75:ce:e0.';return;}
+    err.textContent='';
+    const up=a=>a.map(x=>hx(x).toUpperCase());
+    const mac=up(b),e=eui64(b),eu=up(e);
+    const b0=b[0].toString(2).padStart(8,'0'),b1=(b[0]^2).toString(2).padStart(8,'0');
+    const ig=idGroupsOf(e);
+    const gua=compress([...PREFIX,...ig]),ll=compress(['fe80','0000','0000','0000',...ig]);
+    out.innerHTML=
+      `<li>Split the MAC in half. The first half is the OUI (the vendor), the second half is the device ID: <code>${mac.slice(0,3).join(':')}</code> | <code>${mac.slice(3).join(':')}</code></li>`+
+      `<li>Put <code>FF:FE</code> in the middle: <code>${[...mac.slice(0,3),'FF','FE',...mac.slice(3)].join(':')}</code></li>`+
+      `<li>Flip the 7th bit of the first byte: <code>${mac[0]}</code> = <code>${b0}</code> becomes <code>${b1}</code> = <code>${eu[0]}</code></li>`+
+      `<li>The interface ID is <code>${ig.join(':')}</code></li>`+
+      `<li>If the RA prefix is <code>2001:db8:acad:1::/64</code>, the device's global address is <code>${esc(gua)}</code></li>`+
+      `<li>Its link-local address is <code>${esc(ll)}</code></li>`;
+  }
+  $('#mac').addEventListener('input',render);
+  $('#macRand').addEventListener('click',()=>{const a=[rnd(256)&0xfc,rnd(256),rnd(256),rnd(256),rnd(256),rnd(256)];$('#mac').value=a.map(x=>hx(x)).join(':');render();});
+  render();
+  const Q=[['2001:db8:acad:1:fe99:47ff:fe75:cee0','eui','fffe sits in the middle (…47ff:fe75…), so this came from EUI-64.'],['2001:db8:acad:1:50a5:8a35:a5bb:66e1','rand','No fffe in the middle. That looks like a random interface ID.'],['fe80::7279:b3ff:fe92:3640','eui','There is ff:fe in the middle (…b3ff:fe92…), so it is EUI-64. This is a typical router LLA.'],['2001:db8:acad:1:3c1f:9d02:7e45:b8a6','rand','No fffe, so this is a random interface ID.']];
+  const host=$('#eqGame');
+  Q.forEach((q,i)=>{
+    const d=document.createElement('div');d.style.margin='0 0 .8rem';
+    d.innerHTML=`<p style="margin:0 0 .3rem"><code style="font-weight:800;word-break:break-all">${q[0]}</code></p><div class="row"><button type="button" class="btn" data-k="eui">EUI-64</button><button type="button" class="btn" data-k="rand">Random</button></div><p class="fb" role="status" aria-live="polite"></p>`;
+    let wrong=0,done=false;
+    d.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      if(done)return;const fb=d.querySelector('.fb');
+      if(b.dataset.k===q[1]){done=true;b.classList.add('ok');d.querySelectorAll('button').forEach(x=>{if(x!==b)x.disabled=true;});fb.textContent='✓ '+q[2];fb.className='fb ok';Score.complete('mc-eq'+i,wrong===0);}
+      else{wrong++;b.classList.add('bad');b.disabled=true;fb.textContent='✗ Look for fffe in the middle.';fb.className='fb bad';}
+    }));
+    host.appendChild(d);
+  });
+})();
+
+/* =============== 15: read the output =============== */
+(function(){
+  const OUTS=[
+   {html:`<pre>C:\\&gt; ipconfig
+Ethernet adapter Local Area Connection:
+   Connection-specific DNS Suffix . :
+   IPv6 Address. . . . . . . . . . . : <span class="cl" data-k="gua">2001:db8:acad:1:50a5:8a35:a5bb:66e1</span>
+   Link-local IPv6 Address . . . . . : <span class="cl" data-k="lla">fe80::50a5:8a35:a5bb:66e1</span>
+   Default Gateway . . . . . . . . . : <span class="cl" data-k="gw">fe80::1</span></pre>`,
+    tasks:[['Click the global unicast address (GUA).','gua','The GUA starts with 2001 here. It is routable.'],['Click the link-local address (LLA).','lla','Starts with fe80. Only valid on this link.'],['Click the default gateway.','gw','The gateway is the router\'s link-local address. That is normal and best practice.']]},
+   {html:`<pre><span class="dim">R1# show ipv6 interface brief</span>
+<span class="cl" data-k="hdr0">GigabitEthernet0/0/0 [up/up]</span>
+    <span class="cl" data-k="lla0">FE80::1:1</span>
+    <span class="cl" data-k="gua0">2001:DB8:ACAD:1::1</span>
+GigabitEthernet0/0/1 [up/up]
+    <span class="cl" data-k="lla1">FE80::1:2</span>
+    <span class="cl" data-k="gua1">2001:DB8:ACAD:2::1</span>
+Serial0/1/0 [up/up]
+    FE80::1:3
+    2001:DB8:ACAD:3::1
+<span class="cl" data-k="none">Serial0/1/1 [down/down]</span>
+    unassigned</pre>`,
+    tasks:[['Click the global unicast address on GigabitEthernet0/0/1.','gua1','2001:DB8:ACAD:2::1 is the GUA. The fe80 line above it is the LLA.'],['Click a link-local address on GigabitEthernet0/0/0.','lla0','FE80::1:1 is the LLA (it was typed by hand, which is why it is so short).'],['Click the line for the interface with NO address assigned.','none','Serial0/1/1 says unassigned, and it is also down/down.']]},
+   {html:`<pre><span class="dim">R1# show ipv6 route</span>
+IPv6 Routing Table - default - 7 entries
+<span class="cl" data-k="c1">C   2001:DB8:ACAD:1::/64 [0/0]
+     via GigabitEthernet0/0/0, directly connected</span>
+<span class="cl" data-k="l1">L   2001:DB8:ACAD:1::1/128 [0/0]
+     via GigabitEthernet0/0/0, receive</span>
+C   2001:DB8:ACAD:2::/64 [0/0]
+     via GigabitEthernet0/0/1, directly connected
+L   2001:DB8:ACAD:2::1/128 [0/0]
+     via GigabitEthernet0/0/1, receive
+<span class="cl" data-k="mc">L   FF00::/8 [0/0]
+     via Null0, receive</span></pre>`,
+    tasks:[['Click a CONNECTED network route (it starts with C).','c1','C means directly connected: the whole /64 network on that interface.'],['Click a LOCAL route for a router interface address (it starts with L and ends in /128).','l1','L is the specific address on the interface, shown as a /128. It is not a link-local address.'],['Click the multicast route.','mc','FF00::/8 is the multicast range.']]}
+  ];
+  let oi=0,ti=0,wrong=0;
+  const box=$('#outBox');
+  function load(i){
+    oi=i;ti=0;wrong=0;box.innerHTML=OUTS[i].html;$('#outFb').textContent='';
+    $$('[data-o]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.o===i?'true':'false'));
+    ask();
+  }
+  function ask(){const t=OUTS[oi].tasks;$('#outQ').textContent=ti<t.length?'Task '+(ti+1)+' of '+t.length+': '+t[ti][0]:'All tasks done for this output. Try another tab!';}
+  box.addEventListener('click',e=>{
+    const s=e.target.closest('.cl');if(!s)return;
+    const t=OUTS[oi].tasks;if(ti>=t.length)return;
+    const fb=$('#outFb');
+    if(s.dataset.k===t[ti][1]){s.classList.remove('miss');s.classList.add('hit');fb.textContent='✓ '+t[ti][2];fb.className='fb ok';Score.complete('mc-out'+oi+'-'+ti,wrong===0);ti++;wrong=0;ask();}
+    else{wrong++;s.classList.add('miss');setTimeout(()=>s.classList.remove('miss'),600);fb.textContent='✗ Not that one. Look again.';fb.className='fb bad';}
+  });
+  $$('[data-o]').forEach(b=>b.addEventListener('click',()=>load(+b.dataset.o)));
+  load(0);
+})();
+
+/* =============== 16: multicast =============== */
+(function(){
+  const DEV=[['PC1','💻','host'],['PC2','💻','host'],['Printer','🖨️','host'],['R1','📡','router'],['R2','📡','router']];
+  const dv=$('#mcDevs');
+  DEV.forEach(d=>{const x=document.createElement('div');x.className='dev';x.innerHTML=`<span class="em" aria-hidden="true">${d[1]}</span>${d[0]}<small>${d[2]==='router'?'IPv6 router':'IPv6 host'}</small>`;dv.appendChild(x);});
+  const DEST=[
+   ['ff02::1 (all nodes)',[0,1,2,3,4],'Everyone on the link receives it. Routers use this to send RA messages.'],
+   ['ff02::2 (all routers)',[3,4],'Only the routers receive it. Hosts use this to send RS messages.'],
+   ['2001:db8:acad:1::20 (unicast to PC2)',[1],'Only PC2 receives a unicast packet.']
+  ];
+  const seen=new Set();
+  DEST.forEach((d,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='btn';b.style.fontFamily='var(--mono)';b.textContent=d[0];
+    b.addEventListener('click',()=>{
+      $$('#mcDevs .dev').forEach((x,k)=>{x.classList.toggle('rcv',d[1].includes(k));const s=x.querySelector('small');s.textContent=d[1].includes(k)?'✓ receives it':(DEV[k][2]==='router'?'IPv6 router':'IPv6 host');});
+      $('#mcMsg').textContent=d[2];$('#mcMsg').className='fb ok';
+      seen.add(i);if(seen.size===DEST.length)Score.complete('mc-who',true);
+    });
+    $('#mcBtns').appendChild(b);
+  });
+  function sn(){
+    const g=expand($('#snIn').value.trim());
+    if(!g){$('#snOut').textContent='That is not a valid IPv6 address.';$('#snOut').className='fb bad';return;}
+    const s=solicited(g);
+    $('#snOut').textContent=`${s}   (Ethernet multicast MAC: 33:33:ff:${g[6].slice(2)}:${g[7].slice(0,2)}:${g[7].slice(2)})`;
+    $('#snOut').className='fb ok';
+  }
+  $('#snGo').addEventListener('click',sn);$('#snIn').addEventListener('keydown',e=>{if(e.key==='Enter')sn();});
+  sn();
+})();
+
+/* =============== 17: subnet counting =============== */
+(function(){
+  let v=1;
+  const draw=()=>{$('#ctr').innerHTML=`2001:db8:acad:<b>${v.toString(16).padStart(4,'0')}</b>::/64<br><span style="font-size:.8em;color:var(--muted)">subnet #${v} of 65,536</span>`;};
+  $('#cPlus').addEventListener('click',()=>{if(v<0xffff)v++;draw();});
+  $('#cMinus').addEventListener('click',()=>{if(v>0)v--;draw();});
+  $('#c9').addEventListener('click',()=>{v=9;draw();});
+  $('#cff').addEventListener('click',()=>{v=0xff;draw();});
+  $('#cReset').addEventListener('click',()=>{v=1;draw();});
+  draw();
+  const POOL=[8,9,15,25,31,99,159,255,4095];
+  let cur,n=0;
+  function newQ(){
+    let x;do{x=POOL[rnd(POOL.length)];}while(cur&&x===cur.v);
+    cur={v:x,tries:0,done:false,shown:false};
+    $('#nsQ').textContent=`2001:db8:acad:${x.toString(16)}::/64`;
+    $('#nsIn').value='';$('#nsFb').textContent='';$('#nsIn').classList.remove('ok','bad');
+  }
+  function check(){
+    if(cur.done)return;
+    const raw=$('#nsIn').value.trim().toLowerCase();
+    if(!raw){$('#nsFb').textContent='Type an answer first.';$('#nsFb').className='fb bad';return;}
+    cur.tries++;
+    let val=null;
+    if(/^[0-9a-f]{1,4}$/.test(raw))val=parseInt(raw,16);
+    else{const m=raw.match(/^([0-9a-f:]+)\/64$/);const ex=m&&expand(m[1]);if(ex&&ex.slice(0,3).join(':')==='2001:0db8:acad'&&ex.slice(4).every(x=>x==='0000'))val=parseInt(ex[3],16);}
+    const ok=val===cur.v+1;
+    $('#nsFb').textContent=ok?`✓ Correct! After ${cur.v.toString(16)} comes ${(cur.v+1).toString(16)}.`:(val===null?'Type just the new subnet ID (like a) or the whole prefix.':'Not quite. Count up by one in hex: …8, 9, a, b, c, d, e, f, 10…');
+    $('#nsFb').className='fb '+(ok?'ok':'bad');$('#nsIn').classList.toggle('ok',ok);$('#nsIn').classList.toggle('bad',!ok);
+    if(ok){cur.done=true;Score.complete('pr-sn'+(++n),cur.tries===1&&!cur.shown);}
+  }
+  $('#nsCheck').addEventListener('click',check);
+  $('#nsIn').addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+  $('#nsShow').addEventListener('click',()=>{if(cur.done)return;cur.shown=true;cur.done=true;$('#nsIn').value=(cur.v+1).toString(16);$('#nsFb').textContent='Answer shown: '+(cur.v+1).toString(16);$('#nsFb').className='fb ok';Score.complete('pr-sn'+(++n),false);});
+  $('#nsNew').addEventListener('click',newQ);
+  newQ();
+  if(IT)window.__ns=()=>cur;
+})();
+
+/* =============== 18: subnet planner =============== */
+(function(){
+  const LINKS=[['R1 LAN A (PC1)','R1','GigabitEthernet0/0/0','1'],['R1 LAN B (PC2)','R1','GigabitEthernet0/0/1','1'],['R1 to R2 serial link','R1','Serial0/1/0','1'],['R2 LAN C (PC3)','R2','GigabitEthernet0/0/0','1'],['R2 LAN D (PC4)','R2','GigabitEthernet0/0/1','1']];
+  const host=$('#plan');
+  LINKS.forEach((l,i)=>{
+    const d=document.createElement('div');d.className='link';
+    d.innerHTML=`<label for="pl${i}">${l[0]}</label><input type="text" id="pl${i}" autocomplete="off" spellcheck="false" aria-label="Subnet ID for ${l[0]}" placeholder="hex, like 1" style="font-family:var(--mono);width:100%"><code id="plp${i}"></code>`;
+    host.appendChild(d);
+    d.querySelector('input').addEventListener('input',show);
+  });
+  function ids(){return LINKS.map((l,i)=>$('#pl'+i).value.trim().toLowerCase());}
+  function show(){ids().forEach((v,i)=>{$('#plp'+i).textContent=/^[0-9a-f]{1,4}$/.test(v)?`2001:db8:acad:${parseInt(v,16).toString(16)}::/64`:'';});}
+  $('#planPreset').addEventListener('click',()=>{LINKS.forEach((l,i)=>{$('#pl'+i).value=String(i+1);});show();});
+  function build(){
+    const v=ids(),fb=$('#planFb');
+    if(v.some(x=>!/^[0-9a-f]{1,4}$/.test(x))){fb.textContent='Every link needs a subnet ID: 1 to 4 hex digits (0 to 9 and a to f).';fb.className='fb bad';return;}
+    const nums=v.map(x=>parseInt(x,16));
+    if(new Set(nums).size!==nums.length){fb.textContent='Two links share the same subnet ID. Every subnet needs its own.';fb.className='fb bad';return;}
+    const hexs=nums.map(n=>n.toString(16));
+    const cfg={R1:'',R2:''};
+    LINKS.forEach((l,i)=>{
+      const host6=(l[2].startsWith('Serial')&&l[1]==='R2')?'2':'1';
+      cfg[l[1]]+=`interface ${l[2].toLowerCase().replace('gigabitethernet','gigabitethernet ').replace('serial','serial ')}\n ipv6 address 2001:db8:acad:${hexs[i]}::${host6}/64\n no shutdown\n exit\n`;
+    });
+    // R2 also sits on the serial link: ::2 on its serial interface
+    cfg.R2+=`interface serial 0/1/0\n ipv6 address 2001:db8:acad:${hexs[2]}::2/64\n no shutdown\n exit\n`;
+    $('#cfgR1').textContent=cfg.R1.trimEnd();$('#cfgR2').textContent=cfg.R2.trimEnd();
+    $('#planOut').hidden=false;
+    const order=[...nums].sort((a,b)=>a-b).join()===nums.join()&&nums.every((n,i)=>i===0||n===nums[i-1]+1);
+    fb.textContent=order?'✓ A tidy plan: consecutive subnets in order. Notice that even the serial link gets a /64.':'✓ Valid plan! Every link has its own subnet ID. A tidy plan numbers them in order, but any unique IDs work.';
+    fb.className='fb ok';Score.complete('pr-plan',true);
+  }
+  $('#planGo').addEventListener('click',build);
+  $('#planCopy').addEventListener('click',()=>{
+    const text='! R1\n'+$('#cfgR1').textContent+'\n! R2\n'+$('#cfgR2').textContent;
+    const done=()=>{$('#planCopied').textContent='Copied both configs.';};
+    const fallback=()=>{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}document.body.removeChild(t);$('#planCopied').textContent=ok?'Copied both configs.':'Could not copy. Select the text and copy it by hand.';};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,fallback);else fallback();
+  });
+  if(IT)window.__plan=()=>({r1:$('#cfgR1').textContent,r2:$('#cfgR2').textContent});
+})();
+
+/* =============== 20: share score =============== */
+const Reporter=(function(){
+  const msg=t=>{$('#rpMsg').textContent=t;};
+  function update(){const ok=Score.finished>0;$('#rpSend').disabled=!ok;$('#rpCopy').disabled=!ok;}
+  $('#rpSend').hidden=!CONFIG.endpoint;
+  $('#rpNote').textContent=CONFIG.endpoint?'Nothing is sent until you press Send my score.':'Copy your score and give it to your teacher.';
+  async function send(){
+    const name=$('#rpName').value.trim();
+    if(!name){msg('Type your name or student ID first.');$('#rpName').focus();return;}
+    const body={key:CONFIG.key,tool:CONFIG.tool,name,period:$('#rpPeriod').value.trim(),finished:Score.finished,firstTry:Score.firstTry,detail:detailText()};
+    $('#rpSend').disabled=true;msg('Sending...');
+    try{
+      const r=await fetch(CONFIG.endpoint,{method:'POST',body:JSON.stringify(body)});
+      const j=await r.json();
+      if(j&&j.ok)msg(`Sent. Your teacher can see ${Score.finished} completed and ${Score.firstTry} right on the first try.`);
+      else msg(`Your score was not accepted (${j&&j.error?j.error:'unknown reason'}). Use Copy my score and give it to your teacher.`);
+    }catch(e){msg('Could not reach the score sheet. Use Copy my score and give it to your teacher.');}
+    finally{update();}
+  }
+  async function copy(){
+    const name=$('#rpName').value.trim()||'(no name)';
+    const text=`${name} | ${CONFIG.tool} | ${Score.finished} completed | ${Score.firstTry} right on first try | ${detailText()} | ${new Date().toLocaleString()}`;
+    const box=$('#rpText');box.value=text;box.hidden=false;box.focus();box.select();
+    try{await navigator.clipboard.writeText(text);msg('Copied. Paste it where your teacher asked.');}
+    catch(e){msg('Select the text in the box and copy it, then give it to your teacher.');}
+  }
+  $('#rpSend').addEventListener('click',send);
+  $('#rpCopy').addEventListener('click',copy);
+  return {update};
+})();
+
+if(IT){window.__t={MC,verdict,expand,compress,go,goId,Score};}
+updateFinal();updateQuizScore();
+go(0);
+})();
+</script>
+</body>
+</html>
